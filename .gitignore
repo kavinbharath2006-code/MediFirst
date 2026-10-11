@@ -1,0 +1,43 @@
+# ─── Node ───────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ─── Environment (never commit real credentials) ────────────────────
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# ─── Build output ───────────────────────────────────────────────────
+build/
+frontend/build/
+frontend/.parcel-cache/
+dist/
+
+# ─── Backup (moved files, never commit) ─────────────────────────────
+_backup/
+
+# ─── Python / RAG service ───────────────────────────────────────────
+rag_service/venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ─── Vector stores / indexes ────────────────────────────────────────
+chroma_db/
+*.index
+firstaid_meta.json
+
+# ─── Tooling scratch dirs ───────────────────────────────────────────
+.vercel/
+.vercel-tmp/
+
+# ─── Editors / OS ───────────────────────────────────────────────────
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

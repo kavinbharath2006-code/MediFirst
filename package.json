@@ -1,0 +1,25 @@
+{
+  "name": "medifirst-merged",
+  "version": "1.0.0",
+  "description": "MediFirst monorepo — one install, one dev command, one production server",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend && rag_service\\venv\\Scripts\\python.exe -m pip install -r rag_service\\requirements.txt",
+    "check": "node scripts/precheck.cjs",
+    "predev": "node scripts/precheck.cjs",
+    "dev": "concurrently -k --kill-others-on-fail --names frontend,backend,rag --prefix-colors cyan,green,magenta \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:rag\"",
+    "dev:frontend": "npm start --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:rag": "rag_service\\venv\\Scripts\\python.exe -m uvicorn rag_api:app --app-dir rag_service --host 0.0.0.0 --port 8000",
+    "build": "npm run build --prefix frontend",
+    "prestart": "node scripts/precheck.cjs --production",
+    "start": "node backend/server.js --production",
+    "test": "npm test --prefix backend"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  :focus-visible {
+    @apply outline-none ring-2 ring-teal-500 ring-offset-2;
+  }
+}
+
+@layer components {
+  /* Urgency level variants */
+  .urgency-emergency {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+  .urgency-urgent {
+    @apply bg-amber-50 border-amber-200 text-amber-800;
+  }
+  .urgency-non_emergency {
+    @apply bg-green-50 border-green-200 text-green-800;
+  }
+  .urgency-uncertain {
+    @apply bg-slate-50 border-slate-200 text-slate-700;
+  }
+
+  /* Pulse ring for listening state */
+  .pulse-ring {
+    animation: pulse-ring 1.5s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+
+  /* Step card shimmer loading */
+  .skeleton {
+    @apply bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse rounded;
+  }
+
+  /* Smooth fade in */
+  .fade-in {
+    animation: fadeIn 0.35s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Card base */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100;
+  }
+
+  .btn-primary {
+    @apply bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold
+           px-5 py-3 rounded-xl transition-all duration-150 focus-visible:ring-teal-500
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold
+           px-5 py-3 rounded-xl transition-all duration-150 focus-visible:ring-red-500
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-medium
+           px-4 py-2.5 rounded-xl transition-all duration-150;
+  }
+}

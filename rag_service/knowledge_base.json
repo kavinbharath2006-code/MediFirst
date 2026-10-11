@@ -1,0 +1,142 @@
+[
+  {
+    "id": "seizure_001",
+    "emergencyType": "seizure",
+    "content": "During a seizure, do not restrain the person or hold them down. Clear the area of hard or sharp objects to prevent injury. Time the seizure from start to finish.",
+    "source": "WHO First Aid Guidelines 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "seizure_002",
+    "emergencyType": "seizure",
+    "content": "After a seizure stops, gently roll the person onto their side (recovery position) to keep their airway clear. Stay with them until they are fully conscious. Do not put anything in their mouth during a seizure.",
+    "source": "Red Cross First Aid Manual 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "seizure_003",
+    "emergencyType": "seizure",
+    "content": "Call emergency services (112) if the seizure lasts more than 5 minutes, the person does not regain consciousness, or has another seizure immediately after the first. If this is the person's first known seizure, always call for emergency help.",
+    "source": "Epilepsy Foundation Guidelines 2022",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "cardiac_arrest_001",
+    "emergencyType": "cardiac_arrest",
+    "content": "If a person is unresponsive and not breathing normally, call 112 immediately and begin CPR. Place the heel of your hand on the centre of the chest and push hard and fast — at least 100–120 compressions per minute, 5–6 cm deep.",
+    "source": "WHO Resuscitation Guidelines 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "cardiac_arrest_002",
+    "emergencyType": "cardiac_arrest",
+    "content": "After 30 chest compressions, give 2 rescue breaths: tilt the head back, lift the chin, pinch the nose, and breathe steadily into the mouth for 1 second each. Watch for the chest to rise. Continue the 30:2 cycle until an AED arrives or emergency services take over.",
+    "source": "American Heart Association CPR Guidelines 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "cardiac_arrest_003",
+    "emergencyType": "cardiac_arrest",
+    "content": "If an Automated External Defibrillator (AED) is available, switch it on and follow its spoken instructions. Attach the pads to the person's bare chest, ensure nobody is touching the person, and press the shock button when prompted. Resume CPR immediately after the shock.",
+    "source": "European Resuscitation Council Guidelines 2021",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "burn_001",
+    "emergencyType": "burn",
+    "content": "Cool a burn immediately by holding it under cool (not cold or iced) running water for at least 20 minutes. This reduces pain, limits skin damage, and prevents the burn from deepening. Do not use ice, butter, toothpaste, or any home remedy.",
+    "source": "WHO Burn Care Guidelines 2023",
+    "urgencyLevel": "MODERATE"
+  },
+  {
+    "id": "burn_002",
+    "emergencyType": "burn",
+    "content": "After cooling, cover the burn loosely with a clean non-fluffy material such as cling film or a clean plastic bag. Do not wrap tightly. Do not burst blisters as this increases infection risk.",
+    "source": "Red Cross Burn First Aid Protocol 2022",
+    "urgencyLevel": "MODERATE"
+  },
+  {
+    "id": "burn_003",
+    "emergencyType": "burn",
+    "content": "Seek emergency care for burns larger than 3 cm, burns on the face, hands, feet, or genitals, chemical or electrical burns, burns with suspected inhalation injury, or burns in children and the elderly. Call 112 immediately for severe burns.",
+    "source": "WHO Emergency Burn Triage 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "choking_001",
+    "emergencyType": "choking",
+    "content": "If an adult is choking and cannot speak, cough, or breathe, stand behind them and give up to 5 firm back blows between the shoulder blades with the heel of your hand. Check after each blow if the blockage is cleared.",
+    "source": "Red Cross Choking Protocol 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "choking_002",
+    "emergencyType": "choking",
+    "content": "If back blows fail, perform abdominal thrusts (Heimlich manoeuvre): stand behind the person, make a fist with one hand and place it just above the navel, grip with the other hand and pull sharply inward and upward up to 5 times. Alternate 5 back blows with 5 abdominal thrusts.",
+    "source": "WHO Choking First Aid 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "bleeding_001",
+    "emergencyType": "bleeding",
+    "content": "To control severe bleeding, apply firm direct pressure to the wound using a clean cloth or bandage. Press continuously without lifting — maintain pressure for at least 10 minutes. If the cloth soaks through, add more material on top without removing the first layer.",
+    "source": "WHO First Aid Guidelines 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "bleeding_002",
+    "emergencyType": "bleeding",
+    "content": "If bleeding is from a limb and is life-threatening, apply a tourniquet 5–7 cm above the wound. Note the time of application. Do not remove it. Elevate the injured limb above the level of the heart if there is no suspected fracture. Call 112 immediately.",
+    "source": "Stop the Bleed Campaign — American College of Surgeons 2022",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "fracture_001",
+    "emergencyType": "fracture",
+    "content": "Immobilise a suspected fracture by splinting the limb in the position found. Use padding and a rigid material to support the bone above and below the break. Do not attempt to straighten the limb. Manage swelling with a cool pack wrapped in cloth — do not apply ice directly to skin.",
+    "source": "Red Cross Fracture First Aid 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "fracture_002",
+    "emergencyType": "fracture",
+    "content": "For an open fracture (bone piercing skin), do not push the bone back. Cover the wound loosely with a sterile dressing. Control bleeding with gentle pressure around — not over — the bone. Call 112 immediately as open fractures have high infection risk.",
+    "source": "WHO Trauma Care Guidelines 2022",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "allergic_reaction_001",
+    "emergencyType": "allergic_reaction",
+    "content": "For anaphylaxis (severe allergic reaction): call 112 immediately. If the person has an epinephrine auto-injector (EpiPen), help them use it or administer it in the outer thigh. Lay them flat with legs elevated unless breathing is difficult — then keep them sitting up.",
+    "source": "WHO Anaphylaxis Emergency Management 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "allergic_reaction_002",
+    "emergencyType": "allergic_reaction",
+    "content": "After an EpiPen injection, effects last only 10–15 minutes. The person must be taken to hospital even if they feel better. A second (biphasic) reaction can occur hours later. Keep the person warm, calm, and monitor breathing constantly.",
+    "source": "Anaphylaxis Campaign Guidelines 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "poisoning_001",
+    "emergencyType": "poisoning",
+    "content": "If a person has swallowed a poison, call 112 or Poison Control immediately. Do not induce vomiting unless specifically instructed by a healthcare professional — for some poisons (acids, alkalis, petroleum products) vomiting causes additional damage.",
+    "source": "WHO Poisoning Management Guidelines 2023",
+    "urgencyLevel": "HIGH"
+  },
+  {
+    "id": "stroke_001",
+    "emergencyType": "stroke",
+    "content": "Use the FAST test to identify a stroke: Face drooping on one side, Arm weakness (ask them to raise both arms — does one drift down?), Speech slurred or unable to speak, Time to call 112 immediately. Every minute without treatment increases brain damage. Do not give food, water, or medication.",
+    "source": "WHO Stroke Recognition Guidelines 2023",
+    "urgencyLevel": "CRITICAL"
+  },
+  {
+    "id": "drowning_001",
+    "emergencyType": "drowning",
+    "content": "Remove the drowning person from the water safely — do not enter water without proper equipment unless trained. Call 112 immediately. If the person is not breathing, begin CPR with 5 rescue breaths first (unlike standard CPR), then 30 compressions to 2 breaths. Keep the person warm to prevent hypothermia.",
+    "source": "International Lifesaving Federation Drowning Guidelines 2022",
+    "urgencyLevel": "CRITICAL"
+  }
+]

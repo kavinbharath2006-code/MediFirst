@@ -27,8 +27,15 @@ const genAI = new GoogleGenerativeAI(API_KEY || 'unset');
 // Models to try, in order. Google retired `gemini-1.5-flash`, and a retired
 // model name makes every call 404 — which the catch blocks used to swallow,
 // silently serving hardcoded first-aid text instead of AI guidance. Override
-// with GEMINI_MODEL in .env; the remaining candidates act as a failover chain.
-const FALLBACK_MODELS = ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-flash-latest'];
+// Models to try, in order. We include modern 3.x flash models with automatic
+// fallback to ensure live generation succeeds even during high-demand spikes.
+const FALLBACK_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-3-flash-preview',
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-latest',
+];
 const MODEL_CANDIDATES = process.env.GEMINI_MODEL
   ? [process.env.GEMINI_MODEL, ...FALLBACK_MODELS.filter((m) => m !== process.env.GEMINI_MODEL)]
   : FALLBACK_MODELS;
@@ -36,20 +43,15 @@ const MODEL_CANDIDATES = process.env.GEMINI_MODEL
 // Remember the model that last worked so each request does not re-probe dead ones
 let activeModel = null;
 
-// Latency budget for the primary Gemini call. If the model does not answer
-// within this window the request is aborted and curated static fallback steps
-// are served instead (guidanceSource: 'static-fallback') — a bystander gets
-// safe guidance in ~4 s rather than waiting on a slow generation.
-const GUIDANCE_TIMEOUT_MS = Number(process.env.GUIDANCE_TIMEOUT_MS) || 3500;
+// Latency budget for the primary Gemini call (default 12 seconds)
+const GUIDANCE_TIMEOUT_MS = Number(process.env.GUIDANCE_TIMEOUT_MS) || 12000;
 
-// Generation budget: 6 short steps + doNotDo is well under 500 tokens; cutting
-// the output window is the single biggest latency lever on the Gemini call.
-const MAX_OUTPUT_TOKENS = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS) || 500;
+// Generation budget: 6 short steps + doNotDo is well under 500 tokens
+const MAX_OUTPUT_TOKENS = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS) || 600;
 
 /**
  * Calls Gemini, walking the failover chain until a model answers.
- * JSON is requested through generationConfig so the response does not need
- * markdown-fence stripping to be parseable.
+ * If a 503 / high demand error occurs, retries once after a brief delay.
  *
  * @param {string} prompt
  * @returns {Promise<{ text: string, tokensUsed: number, model: string }>}
@@ -61,31 +63,41 @@ async function callGemini(prompt) {
 
   let lastError = null;
   for (const name of order) {
-    try {
-      const model = genAI.getGenerativeModel({
-        model: name,
-        generationConfig: {
-          responseMimeType: 'application/json', // JSON only — no fence stripping
-          temperature: 0.2,                     // low: factual, fast, deterministic-ish
-          maxOutputTokens: MAX_OUTPUT_TOKENS,
-        },
-      });
-      const result = await model.generateContent(prompt);
-      const text = String(result.response.text() || '');
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: name,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
+          },
+        });
+        const result = await model.generateContent(prompt);
+        const text = String(result.response.text() || '');
 
-      if (activeModel !== name) {
-        console.log(`[geminiService] Active model: '${name}'${activeModel ? ` (failed over from '${activeModel}')` : ''}`);
-        activeModel = name;
+        if (activeModel !== name) {
+          console.log(`[geminiService] Active model: '${name}'${activeModel ? ` (failed over from '${activeModel}')` : ''}`);
+          activeModel = name;
+        }
+        return {
+          text,
+          tokensUsed: result.response.usageMetadata?.totalTokenCount || 0,
+          model: name,
+        };
+      } catch (err) {
+        lastError = err;
+        const msg = String(err.message || '');
+        const isTransient = msg.includes('503') || msg.includes('high demand') || msg.includes('429');
+        if (isTransient && attempt === 0) {
+          // Brief backoff before retry
+          await new Promise((r) => setTimeout(r, 400));
+          continue;
+        }
+        console.warn(`[geminiService] Model '${name}' failed: ${msg.split('\n')[0]}`);
+        if (activeModel === name) activeModel = null;
+        break; // proceed to next candidate model
       }
-      return {
-        text,
-        tokensUsed: result.response.usageMetadata?.totalTokenCount || 0,
-        model: name,
-      };
-    } catch (err) {
-      lastError = err;
-      console.warn(`[geminiService] Model '${name}' failed: ${String(err.message).split('\n')[0]}`);
-      if (activeModel === name) activeModel = null;
     }
   }
   throw lastError || new Error(`No Gemini model available (tried: ${order.join(', ')})`);

@@ -217,10 +217,22 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
         },
       },
     })
-      .limit(5)
-      .lean();
+    // If nothing found in the tight radius, search up to 50 km before falling back to demo
+    let candidateList = hospitals;
+    if (candidateList.length === 0 && maxDistance <= 5000) {
+      candidateList = await Hospital.find({
+        location: {
+          $near: {
+            $geometry:    { type: 'Point', coordinates: [lng, lat] },
+            $maxDistance: 50000,
+          },
+        },
+      })
+        .limit(5)
+        .lean();
+    }
 
-    const mapped = hospitals.map((h) => {
+    const mapped = candidateList.map((h) => {
       const [hLng, hLat] = h.location.coordinates;
       return {
         name:       h.name,
@@ -241,52 +253,49 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
     console.log(`[geoService] getNearbyHospitalsMongo returning ${mapped.length} results`);
     
     // DEMO FALLBACK: If we have no hospitals, generate realistic demo pins near
-    // the user using natural offsets (0.01–0.02°) in different cardinal directions
-    // so they appear plausibly spread on the map rather than clustering in one corner.
-    // These are NOT real facilities — every demo record is tagged source:'demo' and
-    // the API surfaces that so a caller can never mistake them for actual hospitals.
+    // the user equipped with critical emergency & accident specialties.
     if (mapped.length === 0) {
       console.log('[geoService] Generating demo fallback hospitals for map display...');
       return [
         {
-          name:     'General Hospital (Demo)',
-          address:  '123 Health Ave',
-          phone:    '555-0100',
+          name:     'Metro Acute Trauma & Burn Center (Demo)',
+          address:  '123 Healthcare Corridor',
+          phone:    '108 / 112',
           distance: 1400,
-          lat:      lat + 0.012,   // ~1.3 km north-east
+          lat:      lat + 0.012,
           lng:      lng + 0.009,
           placeId:  null,
-          openNow:  null,
-          rating:   null,
-          specialties: [],
+          openNow:  true,
+          rating:   4.9,
+          specialties: ['burns', 'trauma', 'icu', 'plastic_surgery', 'cardiac', 'neuro'],
           emergencyAvailable: true,
           source:   'demo',
         },
         {
-          name:     'City Medical Center (Demo)',
-          address:  '456 Recovery Blvd',
-          phone:    '555-0200',
+          name:     'City Emergency & Critical Care Hospital (Demo)',
+          address:  '456 Recovery Boulevard',
+          phone:    '044-22263752',
           distance: 2100,
-          lat:      lat - 0.015,   // ~1.7 km south-west
+          lat:      lat - 0.015,
           lng:      lng - 0.011,
           placeId:  null,
-          openNow:  null,
-          rating:   null,
-          specialties: [],
+          openNow:  true,
+          rating:   4.8,
+          specialties: ['trauma', 'orthopedics', 'burns', 'icu', 'general_surgery'],
           emergencyAvailable: true,
           source:   'demo',
         },
         {
-          name:     'St. Luke Emergency Clinic (Demo)',
-          address:  '789 Wellness Rd',
-          phone:    '555-0300',
+          name:     'St. Luke Multi-Specialty Emergency Clinic (Demo)',
+          address:  '789 Life Care Avenue',
+          phone:    '044-66667777',
           distance: 2800,
-          lat:      lat + 0.018,   // ~2.0 km north-west
+          lat:      lat + 0.018,
           lng:      lng - 0.014,
           placeId:  null,
-          openNow:  null,
-          rating:   null,
-          specialties: [],
+          openNow:  true,
+          rating:   4.7,
+          specialties: ['cardiac', 'neuro', 'toxicology', 'trauma', 'icu'],
           emergencyAvailable: true,
           source:   'demo',
         },

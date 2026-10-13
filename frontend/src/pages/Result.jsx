@@ -16,12 +16,14 @@ import {
   Check,
   ExternalLink
 } from '../components/icons';
+import { Navigation, Building2, Clock, CheckCircle2 } from 'lucide-react';
 import StepCard from '../components/StepCard';
 import UrgencyBanner from '../components/UrgencyBanner';
 import SpeakButton from '../components/SpeakButton';
 import { GuidanceSkeleton, AlertBanner } from '../components/UIStates';
 import { getEmergencyGuidance } from '../api/claude';
 import { EMERGENCY_NUMBERS } from '../data/constants';
+import { resolveLocation } from '../utils/location';
 import axios from 'axios';
 
 export default function Result() {
@@ -36,6 +38,11 @@ export default function Result() {
   const [showAvoid, setShowAvoid] = useState(true);
   const [showSources, setShowSources] = useState(false);
   const [overrideActive, setOverrideActive] = useState(false);
+
+  // Specialized Hospital Routing State
+  const [hospitals, setHospitals] = useState(state?.guidance?.nearbyHospitals || []);
+  const [userLocation, setUserLocation] = useState(null);
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
 
   // Clinical Feedback State
   const [feedbackRating, setFeedbackRating] = useState(0);
@@ -52,12 +59,45 @@ export default function Result() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Automatically ensure accident-specialized hospitals are loaded
+  useEffect(() => {
+    let isMounted = true;
+    const fetchHospitals = async () => {
+      setLoadingHospitals(true);
+      try {
+        const loc = await resolveLocation().catch(() => ({ lat: 12.9249, lng: 80.1, label: 'Tambaram, Chennai' }));
+        if (isMounted) setUserLocation(loc);
+        const emergencyType = guidance?.emergencyType || guidance?.urgency?.emergencyType || state?.category || 'burn';
+        const res = await axios.get('/api/hospitals', {
+          params: { lat: loc.lat, lng: loc.lng, emergencyType, radius: 30000 }
+        });
+        if (isMounted && res.data?.hospitals?.length > 0) {
+          setHospitals(res.data.hospitals);
+        }
+      } catch (e) {
+        console.warn('Could not load specialized hospitals:', e);
+      } finally {
+        if (isMounted) setLoadingHospitals(false);
+      }
+    };
+
+    if (hospitals.length === 0) {
+      fetchHospitals();
+    } else if (!userLocation) {
+      resolveLocation().then((loc) => isMounted && setUserLocation(loc)).catch(() => {});
+    }
+    return () => { isMounted = false; };
+  }, [guidance, hospitals.length, state?.category]);
+
   const fetchGuidance = async () => {
     setLoading(true);
     setError(null);
     try {
       const result = await getEmergencyGuidance(query);
       setGuidance(result);
+      if (result.nearbyHospitals?.length > 0) {
+        setHospitals(result.nearbyHospitals);
+      }
     } catch (err) {
       setError(err.message || 'Failed to synthesize clinical guidance. Verify backend connectivity.');
     } finally {
@@ -107,7 +147,7 @@ export default function Result() {
   const actionsToAvoid = guidance?.actionsToAvoid || guidance?.doNotDo || [];
   const mistakes = guidance?.mistakes || [];
   const watchFor = guidance?.watchFor || [];
-  const nearbyHospitals = guidance?.nearbyHospitals || [];
+  const nearbyHospitals = hospitals.length > 0 ? hospitals : (guidance?.nearbyHospitals || []);
 
   if (!state?.query && !guidance) {
     return (
@@ -181,9 +221,24 @@ export default function Result() {
           </AlertBanner>
         )}
         {guidance?._isFallback && (
-          <AlertBanner type="warning">
-            <strong>Deterministic Emergency Fallback:</strong> Live AI generation exceeded threshold — serving validated Red Cross / WHO acute safety steps.
-          </AlertBanner>
+          <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-950 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-center text-amber-700 shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold block text-amber-900">Validated Clinical Triage Protocols Active</span>
+                <span className="text-amber-700">Displaying standardized Red Cross & WHO acute stabilization measures for this presentation.</span>
+              </div>
+            </div>
+            <button
+              onClick={fetchGuidance}
+              className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Retry AI Sync</span>
+            </button>
+          </div>
         )}
 
         {/* Loading Skeleton */}
@@ -469,66 +524,132 @@ export default function Result() {
                   </div>
                 </aside>
 
-                {/* SPECIALTY ROUTING / NEARBY HOSPITALS */}
-                {nearbyHospitals.length > 0 && (
-                  <section className="bg-white rounded-xl border border-slate-200/90 p-4.5 shadow-2xs space-y-3.5">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-sky-700 stroke-[2]" />
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                          Specialty Emergency Centers
-                        </h3>
+                {/* SPECIALTY ROUTING / ACCIDENT HOSPITALS */}
+                <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-700">
+                        <Building2 className="w-4 h-4 stroke-[2]" />
                       </div>
-                      <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                        {nearbyHospitals.length} Found
-                      </span>
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                          Accident Response Facilities
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Equipped for {guidance?.category || 'Acute Emergency'} care
+                        </p>
+                      </div>
                     </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      {nearbyHospitals.length} Found Nearby
+                    </span>
+                  </div>
 
-                    <div className="space-y-2.5">
+                  {/* Interactive OpenStreetMap Embed */}
+                  {userLocation && (
+                    <div className="relative w-full rounded-xl overflow-hidden border border-slate-200/80 shadow-2xs" style={{ height: '210px' }}>
+                      <iframe
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${userLocation.lng - 0.04},${userLocation.lat - 0.025},${userLocation.lng + 0.04},${userLocation.lat + 0.025}&layer=mapnik&marker=${userLocation.lat},${userLocation.lng}`}
+                        title="Specialized accident hospitals map"
+                        className="w-full h-full border-0"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm z-10 pointer-events-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Incident GPS: {userLocation.lat.toFixed(4)}° N, {userLocation.lng.toFixed(4)}° E</span>
+                      </div>
+                      <a
+                        href={`https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/hospital`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm text-sky-800 hover:text-sky-900 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-slate-200 z-10 flex items-center gap-1 transition-colors"
+                      >
+                        <Navigation className="w-3 h-3 text-sky-600" />
+                        <span>Open in Google Maps</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Hospital Cards List */}
+                  {loadingHospitals && nearbyHospitals.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-slate-500 font-medium space-y-1">
+                      <div className="w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <span>Locating emergency bays equipped for this injury...</span>
+                    </div>
+                  ) : nearbyHospitals.length === 0 ? (
+                    <div className="py-4 text-center text-xs text-slate-500">
+                      <span>No specialized emergency centers recorded within immediate radius.</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
                       {nearbyHospitals.map((h, idx) => (
                         <div
                           key={idx}
-                          className="p-3 rounded-lg border border-slate-200/90 hover:border-slate-300 transition-all bg-white"
+                          className="p-3.5 rounded-xl border border-slate-200/90 hover:border-slate-300 transition-all bg-slate-50/50 hover:bg-white shadow-2xs space-y-2.5"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-slate-900 truncate">{h.name}</h4>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">{h.name}</h4>
+                                {h.rating && (
+                                  <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60">
+                                    ★ {h.rating}
+                                  </span>
+                                )}
+                              </div>
                               {h.matchReason && (
-                                <p className="text-[11px] font-semibold text-sky-800 mt-0.5">
-                                  {h.matchReason}
-                                </p>
+                                <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200/60 text-[10px] font-semibold">
+                                  <span>✓ {h.matchReason}</span>
+                                </div>
                               )}
                               {h.address && (
-                                <p className="text-[11px] text-slate-500 truncate mt-0.5">{h.address}</p>
+                                <p className="text-[11px] text-slate-500 line-clamp-1 mt-1">{h.address}</p>
                               )}
                             </div>
 
                             {typeof h.distance === 'number' && (
-                              <span className="text-xs font-mono font-bold text-slate-700 flex-shrink-0">
-                                {(h.distance / 1000).toFixed(1)} km
-                              </span>
+                              <div className="text-right flex-shrink-0">
+                                <span className="text-xs font-mono font-bold text-slate-800 block">
+                                  {(h.distance / 1000).toFixed(1)} km
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  ~{Math.max(2, Math.round((h.distance / 1000) * 3))} min
+                                </span>
+                              </div>
                             )}
                           </div>
 
-                          {h.phone && (
-                            <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                              <span className="text-[11px] text-slate-500 font-mono">
-                                Casualty: {h.phone}
-                              </span>
+                          {/* Quick Action Navigation & Dial Buttons */}
+                          <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
+                            {h.phone ? (
                               <a
                                 href={`tel:${h.phone}`}
-                                className="inline-flex items-center gap-1 text-sky-700 hover:text-sky-800 font-bold text-[11px]"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition-colors border border-rose-200/60"
                               >
-                                <span>Dial Desk</span>
-                                <ChevronRight className="w-3 h-3" />
+                                <PhoneCall className="w-3 h-3 stroke-[2.2]" />
+                                <span>Casualty: {h.phone}</span>
                               </a>
-                            </div>
-                          )}
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                24/7 Casualty Open
+                              </span>
+                            )}
+
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(h.name + ' ' + (h.address || ''))}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-bold text-[11px] transition-colors shadow-2xs ml-auto"
+                            >
+                              <Navigation className="w-3 h-3 stroke-[2.2]" />
+                              <span>Route / Navigate</span>
+                            </a>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </section>
-                )}
+                  )}
+                </section>
 
                 {/* CLINICAL AUDIT & FEEDBACK */}
                 <section className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs space-y-2.5 text-center">

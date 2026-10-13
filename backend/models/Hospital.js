@@ -53,6 +53,22 @@ const HospitalSchema = new mongoose.Schema(
       default: [],
     },
 
+    // Provenance column from the seed CSV (e.g. 'manual', 'district-health-office').
+    // Not to be confused with the `source` field the API adds per-response to
+    // flag places/mongo/demo origin of a lookup.
+    source: {
+      type:  String,
+      trim:  true,
+      default: null,
+    },
+
+    // Free-text remarks from the CSV (opening hours, ward notes, ...)
+    notes: {
+      type:  String,
+      trim:  true,
+      default: null,
+    },
+
     city: {
       type:  String,
       trim:  true,

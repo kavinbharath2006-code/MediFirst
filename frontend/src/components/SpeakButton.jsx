@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from './icons';
 import { speak, stopSpeaking, isSpeechSynthesisSupported } from '../hooks/useSpeech';
 
 export default function SpeakButton({ steps, immediateActions, summary }) {
@@ -31,7 +31,6 @@ export default function SpeakButton({ steps, immediateActions, summary }) {
       const script = buildScript();
       speak(script);
       setIsSpeaking(true);
-      // Reset state when synthesis ends
       const checkInterval = setInterval(() => {
         if (!window.speechSynthesis.speaking) {
           setIsSpeaking(false);
@@ -45,22 +44,22 @@ export default function SpeakButton({ steps, immediateActions, summary }) {
     <button
       type="button"
       onClick={handleToggle}
-      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border shadow-2xs ${
         isSpeaking
-          ? 'bg-teal-600 text-white border-teal-600'
-          : 'bg-white text-teal-700 border-teal-200 hover:bg-teal-50'
+          ? 'bg-sky-50 text-sky-900 border-sky-300 ring-1 ring-sky-300 animate-pulse'
+          : 'bg-white text-slate-700 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
       }`}
-      aria-label={isSpeaking ? 'Stop reading instructions' : 'Read instructions aloud'}
+      aria-label={isSpeaking ? 'Stop clinical audio guidance' : 'Read clinical protocol aloud'}
     >
       {isSpeaking ? (
         <>
-          <VolumeX className="w-4 h-4" />
-          <span>Stop reading</span>
+          <VolumeX className="w-3.5 h-3.5 text-sky-700" />
+          <span>Mute Audio</span>
         </>
       ) : (
         <>
-          <Volume2 className="w-4 h-4" />
-          <span>Read aloud</span>
+          <Volume2 className="w-3.5 h-3.5 text-slate-600" />
+          <span>Audio Assist</span>
         </>
       )}
     </button>

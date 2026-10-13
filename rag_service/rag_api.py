@@ -115,6 +115,13 @@ async def lifespan(app: FastAPI):
         else:
             print(f"[rag_api] WARNING: {KB_PATH} not found. POST /build to create the index.")
 
+    # Warm the embedding pipeline once so the first real /retrieve does not
+    # pay the cold-start cost of the sentence-transformer forward pass.
+    print("[rag_api] Warming up embedding model...")
+    warm_start = time.time()
+    state["model"].encode(["warmup query"], show_progress_bar=False, normalize_embeddings=True)
+    print(f"[rag_api] Warmup complete ({(time.time() - warm_start) * 1000:.0f}ms)")
+
     print("[rag_api] RAG service ready [OK]")
     yield
     print("[rag_api] Shutting down RAG service...")

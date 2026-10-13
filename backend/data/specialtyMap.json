@@ -1,0 +1,14 @@
+{
+  "burn": ["burns"],
+  "fracture": ["orthopedics", "trauma"],
+  "bleeding": ["trauma", "general_surgery"],
+  "seizure": ["neuro"],
+  "stroke": ["neuro"],
+  "cardiac_arrest": ["cardiac", "icu"],
+  "poisoning": ["toxicology"],
+  "drowning": ["icu"],
+  "allergic_reaction": ["icu"],
+  "choking": ["ent", "icu"],
+  "head_injury": ["neuro", "trauma"],
+  "general": []
+}

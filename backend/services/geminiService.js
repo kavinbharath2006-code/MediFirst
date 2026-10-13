@@ -28,13 +28,23 @@ const genAI = new GoogleGenerativeAI(API_KEY || 'unset');
 // model name makes every call 404 — which the catch blocks used to swallow,
 // silently serving hardcoded first-aid text instead of AI guidance. Override
 // with GEMINI_MODEL in .env; the remaining candidates act as a failover chain.
-const FALLBACK_MODELS = ['gemini-3-flash-preview', 'gemini-flash-latest'];
+const FALLBACK_MODELS = ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-flash-latest'];
 const MODEL_CANDIDATES = process.env.GEMINI_MODEL
   ? [process.env.GEMINI_MODEL, ...FALLBACK_MODELS.filter((m) => m !== process.env.GEMINI_MODEL)]
   : FALLBACK_MODELS;
 
 // Remember the model that last worked so each request does not re-probe dead ones
 let activeModel = null;
+
+// Latency budget for the primary Gemini call. If the model does not answer
+// within this window the request is aborted and curated static fallback steps
+// are served instead (guidanceSource: 'static-fallback') — a bystander gets
+// safe guidance in ~4 s rather than waiting on a slow generation.
+const GUIDANCE_TIMEOUT_MS = Number(process.env.GUIDANCE_TIMEOUT_MS) || 3500;
+
+// Generation budget: 6 short steps + doNotDo is well under 500 tokens; cutting
+// the output window is the single biggest latency lever on the Gemini call.
+const MAX_OUTPUT_TOKENS = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS) || 500;
 
 /**
  * Calls Gemini, walking the failover chain until a model answers.
@@ -54,7 +64,11 @@ async function callGemini(prompt) {
     try {
       const model = genAI.getGenerativeModel({
         model: name,
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
+        generationConfig: {
+          responseMimeType: 'application/json', // JSON only — no fence stripping
+          temperature: 0.2,                     // low: factual, fast, deterministic-ish
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+        },
       });
       const result = await model.generateContent(prompt);
       const text = String(result.response.text() || '');
@@ -179,6 +193,137 @@ Respond ONLY with valid JSON in this exact format (no markdown fences, no extra 
 }
 
 // ─────────────────────────────────────────────
+// Curated static fallback steps (used when Gemini exceeds the latency budget
+// or fails entirely). Generic, safe, WHO/Red-Cross-aligned bystander actions —
+// never invented treatment. Keyed by urgency.emergencyType.
+// ─────────────────────────────────────────────
+const STATIC_FALLBACK_STEPS = {
+  cardiac_arrest: [
+    'Call emergency services immediately (112 / 108) and put the phone on speaker.',
+    'Start chest compressions: push hard and fast in the centre of the chest, about 2 compressions per second.',
+    'Do not stop compressions unless the person shows signs of life or help takes over.',
+    'If trained and willing, give rescue breaths: 30 compressions then 2 breaths.',
+    'Send someone for an AED if one is nearby and follow its voice prompts.',
+    'Keep monitoring breathing and pulse until emergency services arrive.',
+  ],
+  choking: [
+    'Call emergency services (112 / 108) if the person cannot breathe, cough or speak.',
+    'Encourage forceful coughing if the person can still breathe.',
+    'Give up to 5 sharp back blows between the shoulder blades, leaning the person forward.',
+    'If ineffective, give up to 5 abdominal thrusts: fist above the navel, pull inward and upward.',
+    'Alternate 5 back blows and 5 abdominal thrusts until the object comes out.',
+    'If the person collapses, begin CPR and call emergency services if not already done.',
+  ],
+  seizure: [
+    'Call emergency services (112 / 108) if this is their first seizure, it lasts over 5 minutes, or they are injured.',
+    'Clear the area of hard or sharp objects and cushion the head.',
+    'Do NOT restrain the person or put anything in their mouth.',
+    'Time the seizure from when it started.',
+    'Once the jerking stops, place them in the recovery position (on their side).',
+    'Stay with them and reassure them until fully alert; breathing may be noisy at first.',
+  ],
+  bleeding: [
+    'Call emergency services (112 / 108) immediately for heavy or spurting bleeding.',
+    'Apply firm, continuous direct pressure on the wound with a clean cloth or sterile bandage.',
+    'Do not remove soaked dressings — add more pads on top and maintain steady pressure.',
+    'Lie the person down and elevate legs slightly if in shock, keeping them warm.',
+    'Keep continuous pressure applied until medical responders take over.',
+    'Monitor responsiveness, pulse, and normal breathing continuously.',
+  ],
+  severe_bleeding: [
+    'Call emergency services (112 / 108) immediately for heavy bleeding.',
+    'Apply firm, continuous direct pressure on the wound with a clean cloth or bandage.',
+    'Do not remove soaked dressings — add more on top and keep pressing.',
+    'Lie the person down and raise their legs if they show shock signs.',
+    'Keep pressure constant until professional help arrives.',
+    'Watch breathing and responsiveness continuously.',
+  ],
+  burn: [
+    'Move the person away from the heat source or chemical safely.',
+    'Cool the burn immediately under gently running cool water for at least 20 minutes.',
+    'Do NOT use ice, butter, creams, oils or toothpaste on the burn.',
+    'Gently remove jewelry or constricting items near the burn before swelling begins; do not peel stuck fabric.',
+    'Cover the burn loosely with clean plastic wrap or a sterile non-stick bandage.',
+    'Call emergency services (112 / 108) for burns on face, hands, joints, large areas, or chemical/electrical burns.',
+  ],
+  burns: [
+    'Move the person away from the heat source safely.',
+    'Cool the burn under gently running cool water for at least 20 minutes.',
+    'Do NOT use ice, creams, ointments or toothpaste.',
+    'Remove rings or tight items near the burn before it swells; do not peel stuck clothing.',
+    'Cover loosely with clean, non-fluffy material or a saline dressing.',
+    'Call emergency services (112 / 108) for large, deep, face, hand, genital or circumferential burns.',
+  ],
+  poisoning: [
+    'Call emergency services (112 / 108) or National Poison Control immediately.',
+    'Do NOT induce vomiting unless specifically instructed by medical professionals.',
+    'Do NOT give anything to eat or drink (including milk or water) unless instructed by poison control.',
+    'Identify the substance, container, or chemical ingested and keep it for emergency responders.',
+    'If the person is unconscious or vomiting, place them onto their side in the recovery position.',
+    'Monitor their breathing and responsiveness continuously until emergency help arrives.',
+  ],
+  fracture: [
+    'Call emergency services (112 / 108) if the bone has pierced the skin or limb looks severely deformed.',
+    'Do NOT try to push a bone back or straighten a crooked limb.',
+    'Keep the injured area completely still and supported in the position found.',
+    'Apply a cold ice pack wrapped in a cloth to reduce swelling (never put ice directly on skin).',
+    'If bleeding is present, apply gentle pressure around the wound without pressing on the bone.',
+    'Keep the person calm, still, and warm while waiting for emergency assistance.',
+  ],
+  stroke: [
+    'Call emergency services (112 / 108) immediately — every minute counts for stroke treatment.',
+    'Check FAST: Face drooping, Arm weakness, Speech difficulty, Time to call 112.',
+    'Note down the exact time the symptoms first appeared.',
+    'Keep the person lying down on their side with head slightly elevated.',
+    'Do NOT give them any food, liquids, or aspirin.',
+    'Stay with the person, keep them calm and monitor breathing until help arrives.',
+  ],
+  allergic_reaction: [
+    'Call emergency services (112 / 108) immediately if there is swelling of throat, lips, tongue, or wheezing.',
+    'If an epinephrine auto-injector (EpiPen) is available and prescribed, administer it into the outer mid-thigh.',
+    'Help the person lie down flat with legs raised; if breathing is difficult, allow them to sit up slightly.',
+    'Loosen tight clothing around their neck and chest.',
+    'Do NOT offer food or drink, and avoid standing up rapidly.',
+    'Monitor breathing constantly; prepare to give a second dose of epinephrine after 5-15 minutes if needed.',
+  ],
+  drowning: [
+    'Call emergency services (112 / 108) immediately and get the person out of water safely.',
+    'Check if the person is responsive and breathing normally.',
+    'If not breathing, immediately give 5 initial rescue breaths followed by 30 chest compressions.',
+    'Continue CPR cycles of 30 chest compressions and 2 rescue breaths without stopping.',
+    'Remove wet clothing and cover the person with blankets to prevent hypothermia.',
+    'Do NOT perform abdominal thrusts to drain water; focus purely on high-quality CPR.',
+  ],
+  general: [
+    'Call emergency services (112 / 108) if the situation may be life-threatening.',
+    'Keep the person calm, still and warm.',
+    'Check responsiveness and normal breathing continuously.',
+    'Do not give food or drink in case surgery is needed.',
+    'Do not move the person unless they are in immediate danger.',
+    'Send someone to meet the emergency responders at the entrance.',
+  ],
+};
+
+function getStaticSteps(urgency) {
+  return [...(STATIC_FALLBACK_STEPS[urgency.emergencyType] || STATIC_FALLBACK_STEPS.general)];
+}
+
+/**
+ * Calls Gemini with a hard latency budget. On timeout the caller serves
+ * curated static fallback steps instead of waiting for a slow generation.
+ *
+ * @param {string} prompt
+ * @returns {Promise<{ text: string, tokensUsed: number, model: string }>}
+ */
+function callGeminiWithBudget(prompt) {
+  let timer;
+  const budget = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => reject(new Error(`Gemini exceeded ${GUIDANCE_TIMEOUT_MS}ms latency budget`)), GUIDANCE_TIMEOUT_MS);
+  });
+  return Promise.race([callGemini(prompt), budget]).finally(() => clearTimeout(timer));
+}
+
+// ─────────────────────────────────────────────
 // Exported: getGuidance
 // ─────────────────────────────────────────────
 
@@ -202,7 +347,7 @@ async function getGuidance(query, urgency, ragChunks) {
   const prompt = buildPrompt(query, urgency, ragChunks);
 
   try {
-    const { text, tokensUsed, model } = await callGemini(prompt);
+    const { text, tokensUsed, model } = await callGeminiWithBudget(prompt);
 
     console.log(`[geminiService] getGuidance received response | model=${model} | tokens=${tokensUsed}`);
 
@@ -235,23 +380,16 @@ async function getGuidance(query, urgency, ragChunks) {
       source:                steps.length > 0 ? 'gemini_unstructured' : 'fallback',
     };
   } catch (err) {
-    console.error('[geminiService] getGuidance error — returning hardcoded fallback steps:', err.message);
-    // Hard fallback
+    console.error('[geminiService] getGuidance error/timeout — serving curated static fallback steps:', err.message);
+    // Latency budget tripped or every model failed: curated safety steps
     return {
-      steps: [
-        `Call emergency services immediately at 112. This is a ${urgency.level} emergency.`,
-        'Keep the person calm and still until help arrives.',
-        'Do not move the person unless they are in immediate danger.',
-        'Loosen tight clothing around the neck and chest.',
-        'Monitor breathing and pulse continuously.',
-        'Send someone to meet emergency responders at the entrance.',
-      ],
+      steps:                 getStaticSteps(urgency),
       doNotDo:               ['Do not give food or water to an unconscious person.'],
       callAmbulance:         urgency.callAmbulance,
       estimatedResponseTime: '5–10 minutes',
       tokensUsed:            0,
       aiModel:               null,
-      source:                'fallback',
+      source:                'static-fallback',
     };
   }
 }
@@ -347,4 +485,4 @@ Based on these steps and the emergency type, answer ONLY with valid JSON (no mar
   }
 }
 
-module.exports = { getGuidance, getExtraGuidance, buildPrompt, getActiveModel, callGemini };
+module.exports = { getGuidance, getExtraGuidance, buildPrompt, getActiveModel, callGemini, callGeminiWithBudget, getStaticSteps };

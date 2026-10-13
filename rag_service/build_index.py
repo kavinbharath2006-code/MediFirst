@@ -52,12 +52,12 @@ def main():
         print("[ERROR] knowledge_base.json must be a non-empty JSON array.")
         sys.exit(1)
 
-    print(f"      → {len(chunks)} chunks loaded")
+    print(f"      -> {len(chunks)} chunks loaded")
 
     # ── Load embedding model ──────────────────
     print(f"[2/4] Loading sentence-transformer model: {MODEL_NAME}")
     model = SentenceTransformer(MODEL_NAME)
-    print(f"      → Model loaded (embedding dim: {model.get_sentence_embedding_dimension()})")
+    print(f"      -> Model loaded (embedding dim: {model.get_sentence_embedding_dimension()})")
 
     # ── Embed all chunks ──────────────────────
     print(f"[3/4] Embedding {len(chunks)} chunks...")
@@ -69,7 +69,7 @@ def main():
         batch_size=32,
     )
     embeddings = np.array(embeddings, dtype=np.float32)
-    print(f"      → Embeddings shape: {embeddings.shape}")
+    print(f"      -> Embeddings shape: {embeddings.shape}")
 
     # ── Build and save FAISS index ────────────
     print(f"[4/4] Building FAISS IndexFlatIP and saving...")
@@ -81,11 +81,11 @@ def main():
     with open(METADATA_PATH, "w", encoding="utf-8") as f:
         json.dump(chunks, f, indent=2, ensure_ascii=False)
 
-    print(f"      → Saved: {INDEX_PATH}")
-    print(f"      → Saved: {METADATA_PATH}")
+    print(f"      -> Saved: {INDEX_PATH}")
+    print(f"      -> Saved: {METADATA_PATH}")
     print()
     print("=" * 55)
-    print(f"  ✓ Index built successfully!")
+    print(f"  [OK] Index built successfully!")
     print(f"  Chunks: {index.ntotal} | Dimension: {dim}")
     print("=" * 55)
 

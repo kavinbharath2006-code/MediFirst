@@ -2,9 +2,10 @@
  * services/geoService.js — Geolocation & Hospital Discovery for MediFirst
  *
  * Three main functions:
- *   • getNearbyHospitals(lat, lng, radiusMeters)
+ *   • getNearbyHospitals(lat, lng, radiusMeters, emergencyType)
  *       → Calls Google Maps Places API (nearbysearch) for live hospital data.
- *         Returns top 5, sorted by distance ascending.
+ *         Falls back to MongoDB / demo pins, then ranks the candidates with
+ *         specialtyRouter.rankHospitals() for the emergency type.
  *
  *   • reverseGeocode(lat, lng)
  *       → Calls Google Maps Geocoding API to resolve coordinates to
@@ -17,6 +18,7 @@
 
 const axios   = require('axios');
 const Hospital = require('../models/Hospital');
+const { rankHospitals } = require('./specialtyRouter');
 
 const MAPS_API_KEY   = process.env.GOOGLE_MAPS_API_KEY;
 const PLACES_BASE    = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
@@ -52,17 +54,28 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
 // ─────────────────────────────────────────────
 
 /**
- * Fetches up to 5 nearby hospitals from the Google Maps Places API.
+ * Fetches nearby hospitals (Places → MongoDB → demo fallback chain) and ranks
+ * them for a specific emergency type. See services/specialtyRouter.js for the
+ * tier rules; each returned hospital gains matchedSpecialties + matchReason.
  *
  * @param {number} lat
  * @param {number} lng
  * @param {number} [radiusMeters=5000]
+ * @param {string} [emergencyType='general'] — urgencyEngine emergency type slug
  * @returns {Promise<Array<{
  *   name: string, address: string, phone: string|null,
- *   distance: number, lat: number, lng: number, placeId: string
+ *   distance: number, lat: number, lng: number, placeId: string|null,
+ *   specialties: string[], emergencyAvailable: boolean,
+ *   matchedSpecialties: string[], matchReason: string, source: string
  * }>>}
  */
-async function getNearbyHospitals(lat, lng, radiusMeters = 5000) {
+async function getNearbyHospitals(lat, lng, radiusMeters = 5000, emergencyType = 'general') {
+  const candidates = await fetchNearbyHospitalsRaw(lat, lng, radiusMeters);
+  return rankHospitals(candidates, emergencyType);
+}
+
+/** Unranked candidate fetch shared by all lookup paths below. */
+async function fetchNearbyHospitalsRaw(lat, lng, radiusMeters = 5000) {
   console.log(`[geoService] getNearbyHospitals called | lat=${lat} lng=${lng} radius=${radiusMeters}m`);
 
   if (!MAPS_API_KEY) {
@@ -110,6 +123,10 @@ async function getNearbyHospitals(lat, lng, radiusMeters = 5000) {
           placeId:    place.place_id || null,
           openNow:    place.opening_hours?.open_now ?? null,
           rating:     place.rating || null,
+          // Places nearbysearch carries no specialty data — such hits can only
+          // ever land in the "General emergency" tier of the ranking.
+          specialties: [],
+          emergencyAvailable: true,
           source:     'places',
         };
       })
@@ -215,6 +232,8 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
         placeId:    h.placeId || null,
         openNow:    null,
         rating:     h.rating || null,
+        specialties: Array.isArray(h.specialties) ? h.specialties : [],
+        emergencyAvailable: h.emergencyAvailable !== false,
         source:     'mongo',
       };
     });
@@ -239,6 +258,8 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
           placeId:  null,
           openNow:  null,
           rating:   null,
+          specialties: [],
+          emergencyAvailable: true,
           source:   'demo',
         },
         {
@@ -251,6 +272,8 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
           placeId:  null,
           openNow:  null,
           rating:   null,
+          specialties: [],
+          emergencyAvailable: true,
           source:   'demo',
         },
         {
@@ -263,6 +286,8 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
           placeId:  null,
           openNow:  null,
           rating:   null,
+          specialties: [],
+          emergencyAvailable: true,
           source:   'demo',
         },
       ];
@@ -283,6 +308,8 @@ async function getNearbyHospitalsMongo(lat, lng, maxDistance = 5000) {
         placeId:    null,
         openNow:    null,
         rating:     null,
+        specialties: [],
+        emergencyAvailable: true,
         source:     'demo',
       },
     ];

@@ -1,62 +1,90 @@
 import React from 'react';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle } from './icons';
 
 export default function StepCard({ step, number, isActive, isCompleted, onToggle }) {
-  const hasWarning = step.warning && step.warning.trim();
+  const isObject = typeof step === 'object' && step !== null;
+  const title = isObject ? step.title : null;
+  const instruction = isObject ? step.instruction : step;
+  const warning = isObject ? step.warning : null;
 
   return (
     <div
-      className={`card p-4 transition-all fade-in ${
-        isActive ? 'ring-2 ring-teal-400 shadow-md' : ''
-      } ${isCompleted ? 'opacity-75' : ''}`}
+      onClick={() => onToggle && onToggle(number)}
+      className={`rounded-xl border p-4 sm:p-4.5 cursor-pointer select-none transition-all ${
+        isCompleted
+          ? 'bg-slate-50/80 border-slate-200/80 opacity-75'
+          : isActive
+          ? 'bg-white border-sky-400 ring-1 ring-sky-200 shadow-2xs'
+          : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs'
+      }`}
     >
-      <div className="flex items-start gap-3">
-        {/* Step number / completion toggle */}
+      <div className="flex items-start gap-3.5">
+        {/* Verification Checkmark Box */}
         <button
           type="button"
-          onClick={() => onToggle && onToggle(number)}
-          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 ${
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle && onToggle(number);
+          }}
+          className={`flex-shrink-0 w-5 h-5 rounded mt-0.5 flex items-center justify-center border transition-all ${
             isCompleted
-              ? 'bg-teal-600 border-teal-600 text-white'
+              ? 'bg-emerald-700 border-emerald-800 text-white'
               : isActive
-              ? 'border-teal-500 text-teal-600 bg-teal-50'
-              : 'border-slate-300 text-slate-500 bg-white hover:border-teal-400 hover:text-teal-600'
+              ? 'border-sky-500 bg-sky-50 text-sky-800'
+              : 'border-slate-300 bg-white text-slate-500 hover:border-slate-400'
           }`}
-          aria-label={isCompleted ? `Step ${number} completed` : `Mark step ${number} as done`}
+          aria-label={isCompleted ? `Step ${number} executed` : `Mark step ${number} as executed`}
         >
-          {isCompleted ? <CheckCircle className="w-4 h-4" /> : number}
+          {isCompleted ? (
+            <Check className="w-3.5 h-3.5 stroke-[3]" />
+          ) : (
+            <span className="font-mono text-[10px] font-bold">{number}</span>
+          )}
         </button>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 space-y-1">
+          {/* Header Row */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+              Action Step {number}
+            </span>
+            {isCompleted && (
+              <span className="text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                EXECUTED
+              </span>
+            )}
+          </div>
+
           {/* Title */}
-          {step.title && (
-            <h3 className={`font-semibold text-sm sm:text-base mb-1 leading-snug ${
-              isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'
-            }`}>
-              {step.title}
+          {title && (
+            <h3
+              className={`text-sm font-bold tracking-tight leading-snug ${
+                isCompleted ? 'text-slate-500 line-through' : 'text-slate-900'
+              }`}
+            >
+              {title}
             </h3>
           )}
 
-          {/* Instruction */}
-          {typeof step === 'string' ? (
-            <p className={`text-sm sm:text-base leading-relaxed ${
-              isCompleted ? 'text-slate-400' : 'text-slate-600'
-            }`}>
-              {step}
-            </p>
-          ) : (
-            <p className={`text-sm sm:text-base leading-relaxed ${
-              isCompleted ? 'text-slate-400' : 'text-slate-600'
-            }`}>
-              {step.instruction}
-            </p>
-          )}
+          {/* Action Instruction */}
+          <p
+            className={`text-xs sm:text-sm leading-relaxed ${
+              isCompleted ? 'text-slate-500' : 'text-slate-700'
+            }`}
+          >
+            {instruction}
+          </p>
 
-          {/* Warning */}
-          {hasWarning && (
-            <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs sm:text-sm text-amber-800 leading-relaxed">{step.warning}</p>
+          {/* Clinical Precaution / Warning */}
+          {warning && (
+            <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 text-amber-900 flex items-start gap-2 text-xs">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-700 flex-shrink-0 mt-0.5 stroke-[2]" />
+              <div className="leading-relaxed">
+                <strong className="font-semibold block text-[11px] uppercase tracking-wider text-amber-950">
+                  Clinical Precaution:
+                </strong>
+                <span>{warning}</span>
+              </div>
             </div>
           )}
         </div>

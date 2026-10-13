@@ -1,10 +1,11 @@
 /**
  * controllers/hospitalController.js — Nearby Hospital Lookup Controller
  *
- * Handles GET /api/hospitals?lat=&lng=&radius=
+ * Handles GET /api/hospitals?lat=&lng=&radius=&emergencyType=
  *
  * Delegates to geoService.getNearbyHospitals() which tries the Google Maps
- * Places API first and falls back to the MongoDB $near query automatically.
+ * Places API first and falls back to the MongoDB $near query automatically,
+ * then ranks the candidates by specialty for the given emergency type.
  */
 
 const { getNearbyHospitals, reverseGeocode } = require('../services/geoService');
@@ -15,7 +16,8 @@ const { getNearbyHospitals, reverseGeocode } = require('../services/geoService')
 
 /**
  * GET /api/hospitals
- * Query params: lat (required), lng (required), radius (optional, metres)
+ * Query params: lat (required), lng (required), radius (optional, metres),
+ *               emergencyType (optional — urgencyEngine slug, default 'general')
  *
  * @param {import('express').Request}  req
  * @param {import('express').Response} res
@@ -25,7 +27,7 @@ async function getNearby(req, res, next) {
   console.log('[hospitalController] getNearby called | params:', req.query);
 
   try {
-    const { lat, lng, radius } = req.query;
+    const { lat, lng, radius, emergencyType } = req.query;
 
     // ── Validate ──────────────────────────────
     const parsedLat = parseFloat(lat);
@@ -47,10 +49,15 @@ async function getNearby(req, res, next) {
 
     const parsedRadius = radius ? parseInt(radius, 10) : 5000;
     const safeRadius   = Math.min(Math.max(parsedRadius, 500), 50000); // clamp 500m–50km
+    // Unknown slugs simply resolve to no required tags (pure distance order),
+    // so any string is safe to pass through.
+    const safeType     = typeof emergencyType === 'string' && emergencyType.trim()
+      ? emergencyType.trim().toLowerCase()
+      : 'general';
 
     // ── Fetch hospitals + reverse geocode in parallel ──
     const [hospitals, location] = await Promise.all([
-      getNearbyHospitals(parsedLat, parsedLng, safeRadius),
+      getNearbyHospitals(parsedLat, parsedLng, safeRadius, safeType),
       reverseGeocode(parsedLat, parsedLng),
     ]);
 
@@ -65,6 +72,7 @@ async function getNearby(req, res, next) {
       // 'mongo' = local seeded database, 'demo' = synthetic placeholder pins,
       // 'none' = nothing returned
       dataSource:      hospitals[0]?.source || 'none',
+      emergencyType:   safeType,
       nearbyHospitals: hospitals,
     });
   } catch (err) {

@@ -41,6 +41,10 @@ async function handleGuidance(req, res, next) {
 
   const startTime = Date.now();
 
+  // Per-stage wall-clock timings, logged with every request and returned in
+  // the response so the frontend/monitoring can see where latency lives.
+  const timings = { classify: 0, rag: 0, geo: 0, gemini: 0, extraGuidance: 0, db: 0 };
+
   try {
     const { query, lat, lng, sessionId } = req.body;
 
@@ -60,20 +64,32 @@ async function handleGuidance(req, res, next) {
     const resolvedSessionId = sessionId || uuidv4();
 
     // ── 2. Urgency Classification ────────────
+    let tStage = Date.now();
     const urgency = classifyUrgency(trimmedQuery);
+    timings.classify = Date.now() - tStage;
     console.log('[guidanceController] Urgency:', urgency.level, '|', urgency.emergencyType);
 
     // ── 3. Parallel: RAG retrieval + Hospital lookup ──
-    const parallelTasks = [
-      retrieve(trimmedQuery, 3),
-      hasLocation ? getNearbyHospitals(lat, lng) : Promise.resolve([]),
-    ];
+    const tRag = Date.now();
+    const ragTask = retrieve(trimmedQuery, 3).then((r) => {
+      timings.rag = Date.now() - tRag;
+      return r;
+    });
+    const tGeo = Date.now();
+    // Specialty routing: the classified emergencyType decides which nearby
+    // hospitals rank first (see services/specialtyRouter.js).
+    const geoTask = (hasLocation ? getNearbyHospitals(lat, lng, 5000, urgency.emergencyType) : Promise.resolve([])).then((r) => {
+      timings.geo = Date.now() - tGeo;
+      return r;
+    });
 
-    const [ragChunks, nearbyHospitals] = await Promise.all(parallelTasks);
+    const [ragChunks, nearbyHospitals] = await Promise.all([ragTask, geoTask]);
     console.log(`[guidanceController] RAG chunks: ${ragChunks.length} | Hospitals: ${nearbyHospitals.length}`);
 
     // ── 4. Primary Gemini Guidance ───────────
+    tStage = Date.now();
     const guidance = await getGuidance(trimmedQuery, urgency, ragChunks);
+    timings.gemini = Date.now() - tStage;
 
     // ── 4a. Ambulance Protocol (fire-and-forget) ──
     // Triggered when Gemini classifies the situation as requiring ambulance dispatch.
@@ -93,17 +109,18 @@ async function handleGuidance(req, res, next) {
     }
 
     // ── 5. Extra Guidance (ICEMPS 2024 layer) ──
-    const extra = await getExtraGuidance(
-      trimmedQuery,
-      guidance.steps,
-      urgency.level,
-      urgency.emergencyType
-    );
+    // REMOVED FROM THE CRITICAL PATH: the second sequential LLM call added
+    // ~3 s to every response. Clients fetch it lazily from POST
+    // /api/guidance/extra when the UI actually renders mistakes/watchFor.
+    const extra = { mistakes: [], watchFor: [], source: 'deferred' };
 
     // ── 6. Response Timing ───────────────────
     const responseTimeMs = Date.now() - startTime;
+    console.log(`[guidanceController] timings(ms) ${JSON.stringify(timings)}`);
 
     // ── 7. Persist to MongoDB ────────────────
+    // Fire-and-forget: the doc's _id exists synchronously, so feedback can
+    // reference it, but the HTTP response never waits on the DB write.
     let queryLogId = null;
     try {
 
@@ -123,17 +140,18 @@ async function handleGuidance(req, res, next) {
         responseTimeMs,
         callAmbulance:    guidance.callAmbulance,
       });
-      await logEntry.save();
       queryLogId = logEntry._id;
-      console.log('[guidanceController] QueryLog saved:', logEntry._id);
+      logEntry.save()
+        .then(() => console.log('[guidanceController] QueryLog saved (async):', logEntry._id))
+        .catch((dbErr) => console.error('[guidanceController] Failed to save QueryLog:', dbErr.message));
     } catch (dbErr) {
       // Non-fatal: log DB error but still return response
-      console.error('[guidanceController] Failed to save QueryLog:', dbErr.message);
+      console.error('[guidanceController] Failed to build QueryLog:', dbErr.message);
     }
 
     // ── 8. Return response ───────────────────
-    if (guidance.source === 'fallback') {
-      console.warn('[guidanceController] ⚠ Guidance served from hardcoded fallback — check GEMINI_API_KEY / model availability');
+    if (guidance.source !== 'gemini') {
+      console.warn(`[guidanceController] ⚠ Guidance served from ${guidance.source} fallback — check GEMINI_API_KEY / model availability`);
     }
     console.log(`[guidanceController] handleGuidance complete in ${responseTimeMs}ms`);
 
@@ -147,6 +165,8 @@ async function handleGuidance(req, res, next) {
         matchedKeywords:     urgency.matchedKeywords,
       },
       steps:                 guidance.steps,
+      // 'gemini' | 'gemini_unstructured' | 'static-fallback' | 'fallback'
+      guidanceSource:        guidance.source,
       doNotDo:               guidance.doNotDo,
       estimatedResponseTime: guidance.estimatedResponseTime,
       mistakes:              extra.mistakes,
@@ -157,17 +177,18 @@ async function handleGuidance(req, res, next) {
       hospitalDataSource:    nearbyHospitals[0]?.source || 'none',
       ragSources:            ragChunks.map((c) => ({ id: c.id, source: c.source, emergencyType: c.emergencyType })),
       responseTimeMs,
+      timings,
       sessionId:             resolvedSessionId,
       // Needed by clients to rate this answer via POST /api/feedback
       queryLogId:            queryLogId,
       feedbackAvailable:     queryLogId !== null,
       // Make AI degradation visible instead of serving canned text silently:
-      // source 'gemini' = real LLM guidance, 'fallback' = hardcoded safety text
+      // guidanceSource 'gemini' = real LLM guidance, otherwise curated fallback text
       aiSource:              guidance.source,
       aiModel:               guidance.aiModel,
       ragChunksUsed:         ragChunks.length,
       geminiTokensUsed:      guidance.tokensUsed,
-      degraded:              guidance.source === 'fallback' || extra.source === 'fallback',
+      degraded:              guidance.source !== 'gemini' || extra.source === 'fallback',
       ambulanceTriggered:    ambulanceTriggered,
     });
   } catch (err) {
@@ -176,4 +197,46 @@ async function handleGuidance(req, res, next) {
   }
 }
 
-module.exports = { handleGuidance };
+/**
+ * POST /api/guidance/extra
+ *
+ * Lazily fetches the ICEMPS 2024 "mistakes / watchFor" layer that was removed
+ * from the primary response path (it cost a second sequential LLM call of
+ * ~3 s per query). The client sends back the query and the steps it already
+ * received; this endpoint runs the extra Gemini call and answers when ready.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+async function handleGuidanceExtra(req, res, next) {
+  try {
+    const { query, steps, urgencyLevel, emergencyType } = req.body;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ success: false, error: 'query is required and must be a string.' });
+    }
+    const stepList = Array.isArray(steps) ? steps.filter((s) => typeof s === 'string') : [];
+
+    // Reuse the caller's classification when provided; otherwise classify here.
+    const level = ['CRITICAL', 'HIGH', 'MODERATE', 'LOW'].includes(urgencyLevel)
+      ? urgencyLevel
+      : classifyUrgency(query).level;
+    const type = typeof emergencyType === 'string' && emergencyType
+      ? emergencyType
+      : classifyUrgency(query).emergencyType;
+
+    const extra = await getExtraGuidance(query, stepList, level, type);
+    return res.status(200).json({
+      success:  true,
+      mistakes: extra.mistakes,
+      watchFor: extra.watchFor,
+      source:   extra.source,
+    });
+  } catch (err) {
+    console.error('[guidanceController] handleGuidanceExtra error:', err);
+    next(err);
+  }
+}
+
+module.exports = { handleGuidance, handleGuidanceExtra };

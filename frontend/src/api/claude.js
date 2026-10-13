@@ -1,10 +1,15 @@
 import axios from 'axios';
+import { API_BASE } from '../config';
+import { adaptGuidanceResponse } from './adapter';
 
-const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
-const DEMO_MODE = process.env.REACT_APP_DEMO_MODE === 'true' || !ANTHROPIC_KEY || ANTHROPIC_KEY === 'your_anthropic_api_key_here';
+// The browser never talks to Anthropic/Google directly any more — all AI
+// guidance flows through our own backend (POST /api/guidance), which holds the
+// API keys server-side. API_BASE defaults to '' so the CRA dev proxy (and the
+// same-origin production server) handles routing.
+const DEMO_MODE = process.env.REACT_APP_DEMO_MODE === 'true';
 
 /**
- * Validates the structure of an AI guidance response.
+ * Validates the structure of an adapted guidance response.
  * Returns true if the response meets minimum requirements for display.
  */
 function validateResponse(data) {
@@ -17,7 +22,7 @@ function validateResponse(data) {
 }
 
 /**
- * Safe fallback when AI is unavailable or returns invalid data.
+ * Safe fallback when the backend is unreachable or returns invalid data.
  * Based on generic Red Cross / NHS first-aid principles.
  */
 function getFallbackGuidance(description) {
@@ -65,62 +70,36 @@ function getFallbackGuidance(description) {
   };
 }
 
-/**
- * Builds the Claude API prompt for structured emergency guidance.
- */
-function buildPrompt(description) {
-  return `You are MediFirst, an emergency first-aid guidance assistant. A person has described an emergency situation.
-
-EMERGENCY DESCRIPTION:
-"${description}"
-
-Provide structured, calm, actionable first-aid guidance. You MUST respond with ONLY a valid JSON object matching this exact schema:
-
-{
-  "category": "string (e.g. Burns, Seizures, Cardiac emergency, Severe bleeding, etc.)",
-  "urgency": "emergency | urgent | non_emergency | uncertain",
-  "confidence": 0.0-1.0,
-  "emergencyEscalationRequired": true/false,
-  "summary": "string (1-2 sentences describing the situation and severity)",
-  "immediateActions": ["string", "string", "string"],
-  "steps": [
-    {
-      "title": "string (short action title)",
-      "instruction": "string (clear, specific instruction)",
-      "warning": "string or null"
+// One session id per browser tab so the backend can correlate follow-up queries.
+function getSessionId() {
+  try {
+    let id = sessionStorage.getItem('medifirst_session_id');
+    if (!id) {
+      id = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      sessionStorage.setItem('medifirst_session_id', id);
     }
-  ],
-  "actionsToAvoid": ["string"],
-  "professionalHelp": "string (when/how to seek professional help)",
-  "sourceReferences": [
-    { "title": "string", "url": "string" }
-  ]
-}
-
-GUIDELINES:
-- urgency "emergency" = call 112/108 NOW (cardiac arrest, anaphylaxis, severe bleeding, choking, etc.)
-- urgency "urgent" = professional care within hours (fractures, burns, seizures that resolved, etc.)
-- urgency "non_emergency" = manageable at home with clear guidance and professional follow-up
-- urgency "uncertain" = symptoms unclear or ambiguous — err on the side of caution
-- emergencyEscalationRequired = true for any suspected life-threatening condition
-- Keep instructions simple, clear, and suitable for a stressed bystander
-- Maximum 6 steps. Each step must be specific and actionable.
-- Include 2-4 reference URLs from NHS, Red Cross, or WHO when relevant
-- NEVER invent drug doses, medical diagnoses, or treatments not based on established first-aid guidance
-- Respond with ONLY the JSON object — no preamble, no markdown fences`;
+    return id;
+  } catch {
+    return null; // sessionStorage unavailable (private mode) — backend generates one
+  }
 }
 
 /**
- * Main function to get emergency guidance from Claude API.
- * Falls back gracefully if the API is unavailable.
+ * Main function to get emergency guidance from the MediFirst backend.
+ * Falls back gracefully if the backend is unavailable.
+ *
+ * @param {string} description — the emergency as typed/spoken by the user
+ * @param {{ lat?: number|null, lng?: number|null }} [options] — optional location
  */
-export async function getEmergencyGuidance(description) {
+export async function getEmergencyGuidance(description, options = {}) {
   if (!description || description.trim().length < 5) {
     throw new Error('Please describe the emergency in more detail.');
   }
 
   if (DEMO_MODE) {
-    // Return fallback guidance in demo mode (no API call)
+    // Explicit demo mode: no network call at all
     await new Promise(r => setTimeout(r, 1200)); // simulate latency
     const fallback = getFallbackGuidance(description);
     fallback._demoMode = true;
@@ -129,75 +108,43 @@ export async function getEmergencyGuidance(description) {
 
   try {
     const response = await axios.post(
-      'https://api.anthropic.com/v1/messages',
+      `${API_BASE}/api/guidance`,
       {
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1500,
-        messages: [
-          {
-            role: 'user',
-            content: buildPrompt(description)
-          }
-        ]
+        query: description,
+        lat: options.lat ?? null,
+        lng: options.lng ?? null,
+        sessionId: getSessionId(),
       },
       {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        timeout: 30000
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000,
       }
     );
 
-    const rawText = response.data?.content?.[0]?.text;
-    if (!rawText) throw new Error('Empty response from AI service.');
-
-    // Parse and validate
-    let parsed;
-    try {
-      // Strip markdown code fences if present
-      const cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-      parsed = JSON.parse(cleaned);
-    } catch {
-      console.error('AI response parse error:', rawText);
-      throw new Error('The AI returned an unreadable response. Using safe fallback.');
-    }
+    // Adapt the backend contract onto the frontend shape. Even a
+    // success:false body that carries safety-fallback steps is adapted so
+    // those steps reach the screen.
+    const parsed = adaptGuidanceResponse(response.data);
 
     if (!validateResponse(parsed)) {
-      console.error('AI response validation failed:', parsed);
+      console.error('Backend response validation failed:', parsed);
       return { ...getFallbackGuidance(description), _validationFailed: true };
     }
 
-    // Clamp confidence
+    // Clamp confidence the same way the old direct-AI path did
     if (typeof parsed.confidence !== 'number' || parsed.confidence < 0 || parsed.confidence > 1) {
       parsed.confidence = 0.7;
-    }
-
-    // Normalize urgency
-    const validUrgencies = ['emergency', 'urgent', 'non_emergency', 'uncertain'];
-    if (!validUrgencies.includes(parsed.urgency)) {
-      parsed.urgency = 'uncertain';
     }
 
     return parsed;
 
   } catch (err) {
-    if (err.response?.status === 401) {
-      console.error('Claude API: Invalid API key.');
-      return { ...getFallbackGuidance(description), _error: 'Invalid API key — running in safe fallback mode.' };
-    }
-    if (err.response?.status === 429) {
-      console.error('Claude API: Rate limited.');
-      return { ...getFallbackGuidance(description), _error: 'Rate limit reached — using safe fallback guidance.' };
-    }
-    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+    if (err.code === 'ECONNABORTED' || (err.message || '').includes('timeout')) {
       return { ...getFallbackGuidance(description), _error: 'Request timed out — using safe fallback guidance.' };
     }
-
-    console.error('Claude API error:', err.message);
-    return { ...getFallbackGuidance(description), _error: err.message };
+    const serverMsg = err.response?.data?.error;
+    console.error('Guidance API error:', err.message);
+    return { ...getFallbackGuidance(description), _error: serverMsg || err.message };
   }
 }
 

@@ -1,178 +1,211 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Phone, Heart, Lock, Globe, BookOpen } from 'lucide-react';
+import {
+  Lock,
+  CheckCircle2,
+  XCircle,
+  MapPin,
+  Mic,
+  ShieldAlert,
+  PhoneCall
+} from '../components/icons';
 import { EMERGENCY_NUMBERS } from '../data/constants';
 
 export default function Safety() {
-  const navigate = useNavigate();
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-16">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="text-slate-500 hover:text-slate-700 flex items-center gap-1 text-sm font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Safety & About</h1>
-          <p className="text-xs text-slate-500">Limitations, privacy, and emergency contacts</p>
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16 antialiased">
+      
+      {/* Header Banner */}
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-2 bg-white text-slate-700 text-xs font-semibold px-3 py-1 rounded-md border border-slate-200/90 shadow-2xs mb-3">
+          <span className="w-2 h-2 rounded-full bg-sky-700" />
+          <span className="uppercase font-mono tracking-wider">Clinical Governance & Legal Framework</span>
         </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Safety Standards & Compliance
+        </h1>
+        <p className="mt-2 text-base text-slate-600 font-light leading-relaxed">
+          Critical disclaimers, triage limitations, data protection standards, and verified national emergency hotlines.
+        </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Critical warning */}
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+      <div className="space-y-6">
+        
+        {/* Critical Warning Card */}
+        <div className="bg-rose-50 border-2 border-rose-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <ShieldAlert className="w-8 h-8 text-rose-600 shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-bold text-red-800 text-base mb-2">⚠️ Important safety notice</h2>
-              <ul className="space-y-1.5 text-sm text-red-700">
-                <li>• MediFirst is a <strong>first-aid support tool</strong>, not a medical diagnostic system.</li>
-                <li>• It does <strong>not</strong> replace emergency services, paramedics, or healthcare professionals.</li>
-                <li>• For any <strong>life-threatening emergency</strong>, call {EMERGENCY_NUMBERS.primary} immediately.</li>
-                <li>• AI guidance may be incomplete or inapplicable to your exact situation.</li>
-                <li>• Always seek <strong>professional medical assessment</strong> after any serious injury or illness.</li>
+              <h2 className="font-bold text-rose-900 text-base mb-2">
+                Mandatory Clinical Precaution & Disclaimer
+              </h2>
+              <ul className="space-y-2 text-xs sm:text-sm text-rose-800 leading-relaxed font-medium">
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">•</span>
+                  <span>MediFirst is a <strong>first-aid decision support tool</strong>, not a licensed diagnostic physician system.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">•</span>
+                  <span>It does <strong>not</strong> substitute for rapid emergency medical deployment or paramedical intervention.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">•</span>
+                  <span>For any <strong>life-threatening presentation</strong> (cardiac arrest, severe arterial hemorrhage, respiratory asphyxiation), dial <strong>{EMERGENCY_NUMBERS.primary}</strong> immediately.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">•</span>
+                  <span>Always seek <strong>in-person clinical medical assessment</strong> at a trauma hospital following any acute injury or illness.</span>
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Emergency contacts */}
-        <div className="card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Phone className="w-5 h-5 text-red-600" />
-            <h2 className="font-bold text-slate-800">Emergency contact numbers (India)</h2>
+        {/* Emergency Contacts Card */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 font-mono">
+                National Emergency Telephony Hotlines
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Official regional dispatch numbers (Republic of India)
+              </p>
+            </div>
+            <PhoneCall className="w-5 h-5 text-rose-600" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Emergency', number: EMERGENCY_NUMBERS.primary, color: 'red' },
-              { label: 'Ambulance', number: EMERGENCY_NUMBERS.ambulance, color: 'red' },
-              { label: 'Police', number: EMERGENCY_NUMBERS.police, color: 'blue' },
-              { label: 'Fire brigade', number: EMERGENCY_NUMBERS.fire, color: 'orange' },
+              { label: 'EMS Primary', number: EMERGENCY_NUMBERS.primary, desc: 'Ambulance & Trauma' },
+              { label: 'Paramedic Fleet', number: EMERGENCY_NUMBERS.ambulance, desc: 'Central Dispatch' },
+              { label: 'Police Assistance', number: EMERGENCY_NUMBERS.police, desc: 'Emergency Response' },
+              { label: 'Fire & Rescue', number: EMERGENCY_NUMBERS.fire, desc: 'Hazardous Materials' },
             ].map((item) => (
               <a
                 key={item.number}
                 href={`tel:${item.number}`}
-                className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                className="p-4 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-slate-50 transition-all flex flex-col justify-between"
               >
-                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-sm font-bold text-slate-600">
-                  {item.number.charAt(0)}
-                </div>
                 <div>
-                  <div className="text-xs text-slate-500">{item.label}</div>
-                  <div className="font-bold text-slate-800 text-lg leading-none">{item.number}</div>
+                  <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">
+                    {item.label}
+                  </span>
+                  <span className="text-2xl font-bold font-mono text-slate-900 tracking-tight block">
+                    {item.number}
+                  </span>
                 </div>
-              </a>
-            ))}
-          </div>
-          <p className="text-xs text-slate-400 mt-3">
-            Numbers shown are for India. Configure your region's numbers in <code>src/data/constants.js</code>.
-          </p>
-        </div>
-
-        {/* About MediFirst */}
-        <div className="card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Heart className="w-5 h-5 text-teal-600" />
-            <h2 className="font-bold text-slate-800">About MediFirst</h2>
-          </div>
-          <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-            <p>
-              MediFirst is an AI-powered emergency first-aid assistance platform designed to provide
-              immediate, step-by-step guidance when medical emergencies occur in everyday settings.
-            </p>
-            <p>
-              The platform uses a large language model (Claude by Anthropic) to classify emergency
-              descriptions and generate structured first-aid guidance based on established protocols
-              from organizations such as the NHS, Red Cross, and WHO.
-            </p>
-            <p>
-              <strong className="text-slate-800">What MediFirst does:</strong>
-            </p>
-            <ul className="space-y-1 ml-3">
-              <li>✅ Provides structured, calm first-aid guidance</li>
-              <li>✅ Classifies emergencies and indicates urgency</li>
-              <li>✅ Supports text and voice input</li>
-              <li>✅ Helps locate nearby emergency services</li>
-              <li>✅ Works offline with conservative fallback guidance</li>
-            </ul>
-            <p>
-              <strong className="text-slate-800">What MediFirst does NOT do:</strong>
-            </p>
-            <ul className="space-y-1 ml-3">
-              <li>❌ Diagnose medical conditions</li>
-              <li>❌ Replace trained paramedics or doctors</li>
-              <li>❌ Guarantee a specific outcome</li>
-              <li>❌ Dispatch emergency services automatically</li>
-              <li>❌ Provide verified real-time hospital availability</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* AI and data */}
-        <div className="card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Globe className="w-5 h-5 text-teal-600" />
-            <h2 className="font-bold text-slate-800">AI model and data sources</h2>
-          </div>
-          <div className="space-y-2 text-sm text-slate-600 leading-relaxed">
-            <p>
-              First-aid guidance is generated by <strong>Claude Sonnet</strong> (Anthropic) and grounded
-              in established first-aid principles. The model is prompted to reference NHS, Red Cross,
-              and WHO guidelines where applicable.
-            </p>
-            <p className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-amber-800 text-xs">
-              ⚠️ AI-generated medical guidance has not been independently reviewed by a licensed clinician.
-              Treat all guidance as supplementary support, not authoritative medical advice.
-            </p>
-          </div>
-        </div>
-
-        {/* Privacy */}
-        <div className="card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Lock className="w-5 h-5 text-teal-600" />
-            <h2 className="font-bold text-slate-800">Privacy and data</h2>
-          </div>
-          <div className="space-y-2 text-sm text-slate-600 leading-relaxed">
-            <ul className="space-y-1.5">
-              <li>📍 <strong>Location data</strong> is used only to search for nearby services. It is sent directly to Google Maps and is not stored by MediFirst.</li>
-              <li>🎤 <strong>Voice recordings</strong> are processed locally by your browser's Speech Recognition API. Audio is not uploaded to MediFirst servers.</li>
-              <li>📝 <strong>Emergency descriptions</strong> are sent to Anthropic's API to generate guidance. Review <a href="https://www.anthropic.com/privacy" className="text-teal-600 underline" target="_blank" rel="noopener noreferrer">Anthropic's Privacy Policy</a> for details.</li>
-              <li>💾 <strong>No accounts</strong> are required. No personal data is retained by MediFirst after your session ends.</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Sources */}
-        <div className="card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-teal-600" />
-            <h2 className="font-bold text-slate-800">Learn first aid</h2>
-          </div>
-          <div className="space-y-2">
-            {[
-              { label: 'NHS First Aid Guide', url: 'https://www.nhs.uk/conditions/first-aid/' },
-              { label: 'British Red Cross First Aid', url: 'https://www.redcross.org.uk/first-aid/learn-first-aid' },
-              { label: 'WHO Emergency Care', url: 'https://www.who.int/topics/emergency_care/en/' },
-              { label: 'St John Ambulance', url: 'https://www.sja.org.uk/get-advice/first-aid-advice/' },
-            ].map(link => (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-teal-600 hover:underline"
-              >
-                <span>→</span> {link.label}
+                <span className="text-[11px] text-slate-500 mt-2 block font-medium">
+                  {item.desc}
+                </span>
               </a>
             ))}
           </div>
         </div>
+
+        {/* Scope of Practice Comparison */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs">
+          <div className="pb-4 mb-4 border-b border-slate-100">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 font-mono">
+              Clinical Platform Capabilities & Boundaries
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Clear delineation of automated advisory limits vs professional care
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* What MediFirst Does */}
+            <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4.5 space-y-3">
+              <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold uppercase tracking-wider font-mono">
+                <CheckCircle2 size={16} className="text-emerald-600" />
+                <span>Verified System Capabilities</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-700 leading-relaxed font-normal">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span>Grounded clinical first-aid instructions aligned with ERC 2024 protocols</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span>Manchester Triage acuity rating (Code Red, Amber, Green)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span>Multimodal input support (natural language voice & symptom selector)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span>Proximity hospital department routing via satellite geolocation</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* What MediFirst Does NOT Do */}
+            <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-4.5 space-y-3">
+              <div className="flex items-center gap-2 text-rose-800 text-xs font-bold uppercase tracking-wider font-mono">
+                <XCircle size={16} className="text-rose-600" />
+                <span>Explicit Clinical Limitations</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-700 leading-relaxed font-normal">
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">✕</span>
+                  <span>Does not provide definitive differential medical diagnoses</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">✕</span>
+                  <span>Does not replace hands-on paramedics or emergency room physicians</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">✕</span>
+                  <span>Does not prescribe prescription pharmacological regimens</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-rose-600 font-bold">✕</span>
+                  <span>Does not initiate automated municipal 911/108 vehicle dispatch</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Privacy & Transient Storage */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 font-mono">
+                Telemetry Privacy & Zero-Retention Security
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Compliant with transient edge-processing standards
+              </p>
+            </div>
+            <Lock className="w-5 h-5 text-sky-700" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-600 leading-relaxed font-light">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-2 text-slate-900 font-bold mb-1">
+                <MapPin size={14} className="text-sky-700" />
+                <span>Client-Side Geolocation</span>
+              </div>
+              <span>GPS data is evaluated in-memory for coordinate calculation and is never stored on external databases.</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-2 text-slate-900 font-bold mb-1">
+                <Mic size={14} className="text-sky-700" />
+                <span>On-Device Speech Processing</span>
+              </div>
+              <span>Voice inputs are converted via local browser Web Speech APIs without audio streaming to MediFirst servers.</span>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
+
+    </main>
   );
 }

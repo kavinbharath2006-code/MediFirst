@@ -32,12 +32,14 @@ chroma_db/
 *.index
 firstaid_meta.json
 
-# ─── Tooling scratch dirs ───────────────────────────────────────────
+# ─── Tooling scratch dirs & temp scripts ─────────────────────────────
 .vercel/
 .vercel-tmp/
+_tmp_*
 
 # ─── Editors / OS ───────────────────────────────────────────────────
 .vscode/
 .idea/
 Thumbs.db
 Desktop.ini
+

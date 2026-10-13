@@ -38,11 +38,13 @@ const express  = require('express');
 const cors     = require('cors');
 const mongoose = require('mongoose');
 const axios    = require('axios');
+const dns      = require('dns');
 
 const guidanceRoutes    = require('./routes/guidance');
 const hospitalsRoutes   = require('./routes/hospitals');
 const feedbackRoutes    = require('./routes/feedback');
 const logRoutes         = require('./routes/log');
+const emergencyRoutes   = require('./routes/emergencyRoutes');
 const { registerAllJobs } = require('./services/automationService');
 
 const app  = express();
@@ -81,6 +83,7 @@ app.use('/api/guidance',  guidanceRoutes);
 app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/feedback',  feedbackRoutes);
 app.use('/api/log',       logRoutes);
+app.use('/api/emergency', emergencyRoutes);
 
 // Frontend configuration
 app.get('/api/config', (_req, res) => {
@@ -200,7 +203,25 @@ function redact(uri) {
 }
 
 async function connectOnce(uri) {
-  await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 8000,
+      maxIdleTimeMS: 10000,
+      socketTimeoutMS: 45000,
+    });
+  } catch (err) {
+    if (err.message && (err.message.includes('querySrv') || err.message.includes('ECONNREFUSED'))) {
+      console.log('[MongoDB] DNS SRV query failed with local resolver — trying public DNS (8.8.8.8, 1.1.1.1)...');
+      dns.setServers(['8.8.8.8', '1.1.1.1']);
+      await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 8000,
+        maxIdleTimeMS: 10000,
+        socketTimeoutMS: 45000,
+      });
+      return;
+    }
+    throw err;
+  }
 }
 
 async function connectMongo() {

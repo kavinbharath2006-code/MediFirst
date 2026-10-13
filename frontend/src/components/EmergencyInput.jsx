@@ -1,15 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Send, X, RotateCcw, ChevronRight } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  ArrowRight,
+  RotateCcw,
+  X,
+  ChevronDown,
+  Activity,
+  Heart,
+  Flame,
+  Wind,
+  ShieldAlert,
+  AlertCircle
+} from './icons';
 import { useSpeechRecognition } from '../hooks/useSpeech';
-import { EMERGENCY_CATEGORIES } from '../data/constants';
 
-const EXAMPLE_PROMPTS = [
-  'Someone is having a seizure in my office.',
-  'My child has a severe burn from a hot pan.',
-  'A person collapsed and is not breathing.',
-  'Someone is choking and cannot breathe.',
-  'My friend was stung and their throat is swelling.',
+const CLINICAL_CATEGORIES = [
+  { id: 'cardiac', label: 'Cardiac & Chest Pain', icon: Heart },
+  { id: 'breathing', label: 'Airway & Stridor', icon: Wind },
+  { id: 'burns', label: 'Thermal / Chemical Burn', icon: Flame },
+  { id: 'bleeding', label: 'Hemorrhage / Laceration', icon: Activity },
+  { id: 'seizure', label: 'Neurologic & Seizure', icon: ShieldAlert },
+  { id: 'allergic', label: 'Anaphylaxis & Allergy', icon: AlertCircle },
+];
+
+const CLINICAL_EXAMPLES = [
+  'Person collapsed, unresponsive, shallow agonal breathing.',
+  'Child sustained boiling water scald across forearm with erythema.',
+  'Colleague with acute dyspnea, swollen lips and facial urticaria.',
+  'Adult choking on food, silent cough, unable to vocalize.',
+  'Sustained active tonic-clonic jerking for over 3 minutes.',
 ];
 
 export default function EmergencyInput({ onSubmit, loading }) {
@@ -31,26 +52,23 @@ export default function EmergencyInput({ onSubmit, loading }) {
     clearTranscript,
   } = useSpeechRecognition();
 
-  // Merge voice transcript into input text
   const combinedText = isListening
     ? (inputText + ' ' + transcript + interimTranscript).trim()
     : transcript
-      ? (inputText + ' ' + transcript).trim()
-      : inputText;
+    ? (inputText + ' ' + transcript).trim()
+    : inputText;
 
   const handleTextChange = (e) => {
     setInputText(e.target.value);
     setCharCount(e.target.value.length);
-    if (transcript) {
-      clearTranscript();
-    }
+    if (transcript) clearTranscript();
   };
 
   const handleVoiceToggle = () => {
     if (isListening) {
       stopListening();
       if (transcript) {
-        setInputText(prev => (prev + ' ' + transcript).trim());
+        setInputText((prev) => (prev + ' ' + transcript).trim());
         clearTranscript();
       }
     } else {
@@ -69,8 +87,8 @@ export default function EmergencyInput({ onSubmit, loading }) {
     clearTranscript();
   };
 
-  const handleCategorySelect = (cat) => {
-    setSelectedCategory(cat.id === selectedCategory ? null : cat.id);
+  const handleCategorySelect = (id) => {
+    setSelectedCategory(selectedCategory === id ? null : id);
   };
 
   const handleSubmit = (e) => {
@@ -95,190 +113,213 @@ export default function EmergencyInput({ onSubmit, loading }) {
   const isReady = combinedText.trim().length >= 5;
 
   return (
-    <div className="w-full max-w-2xl mx-auto fade-in">
+    <div className="w-full max-w-3xl mx-auto">
       <form onSubmit={handleSubmit} noValidate>
-        {/* Main textarea */}
-        <div className={`card p-4 sm:p-5 transition-all ${isListening ? 'ring-2 ring-red-400 shadow-md' : ''}`}>
-          <div className="flex items-center justify-between mb-3">
-            <label htmlFor="emergency-input" className="text-sm font-semibold text-slate-700">
-              What happened? Describe the emergency:
-            </label>
-            {combinedText && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded"
-                aria-label="Clear input"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
+        {/* Clinical Intake Card */}
+        <div
+          className={`bg-white rounded-xl border transition-all ${
+            isListening
+              ? 'border-rose-400 ring-2 ring-rose-100 shadow-sm'
+              : 'border-slate-200/90 shadow-2xs hover:border-slate-300'
+          }`}
+        >
+          {/* Header Bar */}
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-xl">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-sky-600" />
+              <label htmlFor="emergency-input" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Primary Incident Description
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {combinedText && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded transition-colors"
+                  aria-label="Clear input text"
+                  title="Clear intake"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Text Input Area */}
+          <div className="p-4 sm:p-5 space-y-3">
+            <textarea
+              id="emergency-input"
+              value={isListening ? (inputText + ' ' + transcript).trim() : inputText}
+              onChange={handleTextChange}
+              placeholder={
+                isListening
+                  ? 'Listening actively… speak symptoms, patient status, or mechanism of injury clearly…'
+                  : 'Describe what you observe: patient state, responsiveness, breathing, visible injury, or ingested substances…'
+              }
+              rows={4}
+              maxLength={600}
+              className={`w-full resize-none rounded-lg border text-slate-800 placeholder-slate-400 text-sm sm:text-base p-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all leading-relaxed ${
+                isListening ? 'bg-rose-50/40 border-rose-200' : 'bg-slate-50/60 border-slate-200/80'
+              }`}
+              aria-describedby="intake-counter"
+            />
+
+            {/* Interim Transcript */}
+            {isListening && interimTranscript && (
+              <p className="text-xs text-slate-500 italic px-1 font-mono">
+                Transcribing: <span className="text-slate-700">{interimTranscript}</span>
+              </p>
+            )}
+
+            {/* Micro Controls & Character Counter */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
+              <div id="intake-counter" className="text-slate-400 font-mono text-[11px] tabular-nums">
+                {charCount > 0 ? `${charCount} / 600 characters` : 'Min. 5 characters required'}
+              </div>
+
+              {/* Voice Input Toggle */}
+              <div className="flex items-center gap-2">
+                {isListening && (
+                  <button
+                    type="button"
+                    onClick={handleCancelVoice}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                  >
+                    <X className="w-3 h-3" /> Cancel
+                  </button>
+                )}
+
+                {speechSupported ? (
+                  <button
+                    type="button"
+                    onClick={handleVoiceToggle}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      isListening
+                        ? 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                    aria-label={isListening ? 'Stop recording voice' : 'Start clinical voice input'}
+                  >
+                    {isListening ? (
+                      <>
+                        <MicOff className="w-3.5 h-3.5 text-rose-700" />
+                        <span>Recording Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Voice Dictation</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-slate-400">Microphone unavailable</span>
+                )}
+              </div>
+            </div>
+
+            {speechError && (
+              <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2.5 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                <span>{speechError}</span>
+              </div>
             )}
           </div>
-
-          <textarea
-            id="emergency-input"
-            value={isListening ? (inputText + ' ' + transcript).trim() : inputText}
-            onChange={handleTextChange}
-            placeholder={
-              isListening
-                ? 'Listening… speak clearly…'
-                : 'E.g. "Someone fell and their leg looks broken. They are in severe pain."'
-            }
-            rows={4}
-            maxLength={600}
-            className={`w-full resize-none rounded-xl border text-slate-800 placeholder-slate-400 text-base p-3 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all ${
-              isListening ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'
-            }`}
-            aria-describedby="voice-status input-help"
-          />
-
-          {/* Interim transcript indicator */}
-          {isListening && interimTranscript && (
-            <p className="text-sm text-slate-500 italic mt-1 px-1">
-              Hearing: <span className="text-slate-600">{interimTranscript}</span>
-            </p>
-          )}
-
-          {/* Character count */}
-          <div className="flex items-center justify-between mt-2 px-1">
-            <span id="input-help" className="text-xs text-slate-400">
-              {charCount > 0 ? `${charCount}/600 characters` : 'Minimum 5 characters'}
-            </span>
-
-            {/* Voice controls */}
-            <div className="flex items-center gap-2">
-              {isListening && (
-                <button
-                  type="button"
-                  onClick={handleCancelVoice}
-                  className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 transition"
-                  aria-label="Cancel voice input"
-                >
-                  <X className="w-3 h-3" /> Cancel
-                </button>
-              )}
-
-              {speechSupported ? (
-                <button
-                  type="button"
-                  onClick={handleVoiceToggle}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    isListening
-                      ? 'bg-red-100 text-red-700 pulse-ring'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                  aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-                  id="voice-status"
-                >
-                  {isListening ? (
-                    <>
-                      <MicOff className="w-4 h-4" />
-                      <span>Stop</span>
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-4 h-4" />
-                      <span className="hidden sm:inline">Voice</span>
-                    </>
-                  )}
-                </button>
-              ) : (
-                <span className="text-xs text-slate-400">Voice unavailable</span>
-              )}
-            </div>
-          </div>
-
-          {/* Speech error */}
-          {speechError && (
-            <div className="mt-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 flex items-start gap-2">
-              <span>⚠️</span>
-              <span>{speechError}</span>
-            </div>
-          )}
         </div>
 
-        {/* Example prompts */}
-        <div className="mt-3">
-          <p className="text-xs text-slate-500 mb-2 px-1">Quick examples:</p>
+        {/* Quick Triage Scenarios */}
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Representative Case Studies:
+            </span>
+          </div>
+
           <div className="flex flex-wrap gap-1.5">
-            {EXAMPLE_PROMPTS.map((p, i) => (
+            {CLINICAL_EXAMPLES.map((ex, i) => (
               <button
                 key={i}
                 type="button"
-                onClick={() => handleExampleClick(p)}
-                className="text-xs bg-white border border-slate-200 text-slate-600 px-2.5 py-1 rounded-full hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50 transition-all"
+                onClick={() => handleExampleClick(ex)}
+                className="text-xs bg-white border border-slate-200/90 text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50/70 px-3 py-1.5 rounded-lg transition-all text-left shadow-2xs"
               >
-                {p}
+                {ex}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Category shortcuts */}
+        {/* Clinical Category Shortcuts */}
         <div className="mt-4">
           <button
             type="button"
-            onClick={() => setShowCategories(c => !c)}
-            className="text-xs text-teal-600 font-medium flex items-center gap-1 hover:underline"
+            onClick={() => setShowCategories(!showCategories)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
           >
-            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showCategories ? 'rotate-90' : ''}`} />
-            {showCategories ? 'Hide' : 'Browse'} emergency categories
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCategories ? 'rotate-180' : ''}`} />
+            <span>{showCategories ? 'Collapse' : 'Explore'} specific presentation categories</span>
           </button>
 
           {showCategories && (
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 fade-in">
-              {EMERGENCY_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategorySelect(cat)}
-                  className={`text-left px-3 py-2 rounded-xl border text-sm font-medium transition-all flex items-center gap-2 ${
-                    selectedCategory === cat.id
-                      ? 'border-teal-400 bg-teal-50 text-teal-700'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>{cat.icon}</span>
-                  <span className="leading-tight">{cat.label}</span>
-                </button>
-              ))}
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {CLINICAL_CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                const isSelected = selectedCategory === cat.id;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(cat.id)}
+                    className={`p-3 rounded-lg border text-left flex items-center gap-2.5 transition-all ${
+                      isSelected
+                        ? 'bg-sky-50 border-sky-300 text-sky-900 ring-1 ring-sky-200 shadow-2xs'
+                        : 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${
+                        isSelected ? 'bg-sky-700 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 stroke-[2]" />
+                    </div>
+                    <span className="text-xs font-semibold leading-tight">{cat.label}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Submit button */}
+        {/* Primary Action Button */}
         <button
           type="submit"
           disabled={!isReady || loading}
-          className={`w-full mt-5 flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-bold transition-all ${
+          className={`w-full mt-5 flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-sm font-bold tracking-tight transition-all shadow-sm ${
             isReady && !loading
-              ? 'btn-primary shadow-md hover:shadow-lg'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              ? 'bg-sky-700 hover:bg-sky-800 active:bg-sky-900 text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2'
+              : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
           }`}
-          aria-label="Get emergency guidance"
+          aria-label="Generate verified clinical first-aid protocol"
         >
           {loading ? (
             <>
-              <LoadingSpinner />
-              Analyzing emergency…
+              <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeDashoffset="10" />
+              </svg>
+              <span>Synthesizing Emergency Protocol…</span>
             </>
           ) : (
             <>
-              <Send className="w-5 h-5" />
-              Get First-Aid Guidance
+              <span>Generate Step-by-Step Guidance</span>
+              <ArrowRight className="w-4 h-4 stroke-[2]" />
             </>
           )}
         </button>
       </form>
     </div>
-  );
-}
-
-function LoadingSpinner() {
-  return (
-    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"
-        strokeDasharray="31.4" strokeDashoffset="10" />
-    </svg>
   );
 }

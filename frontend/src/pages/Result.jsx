@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   PhoneCall,
-  MapPin,
   RotateCcw,
   AlertTriangle,
   XCircle,
@@ -14,9 +14,9 @@ import {
   ChevronLeft,
   Star,
   Check,
-  ExternalLink
+  ExternalLink,
 } from '../components/icons';
-import { Navigation, Building2, Clock, CheckCircle2 } from 'lucide-react';
+import { Navigation, Building2 } from 'lucide-react';
 import StepCard from '../components/StepCard';
 import UrgencyBanner from '../components/UrgencyBanner';
 import SpeakButton from '../components/SpeakButton';
@@ -35,6 +35,7 @@ export default function Result() {
   const [error, setError] = useState(null);
   const [completedSteps, setCompletedSteps] = useState(new Set());
   const [activeStep, setActiveStep] = useState(0);
+  const [stepDirection, setStepDirection] = useState(1);
   const [showAvoid, setShowAvoid] = useState(true);
   const [showSources, setShowSources] = useState(false);
   const [overrideActive, setOverrideActive] = useState(false);
@@ -69,7 +70,7 @@ export default function Result() {
         if (isMounted) setUserLocation(loc);
         const emergencyType = guidance?.emergencyType || guidance?.urgency?.emergencyType || state?.category || 'burn';
         const res = await axios.get('/api/hospitals', {
-          params: { lat: loc.lat, lng: loc.lng, emergencyType, radius: 30000 }
+          params: { lat: loc.lat, lng: loc.lng, emergencyType, radius: 30000 },
         });
         if (isMounted && res.data?.hospitals?.length > 0) {
           setHospitals(res.data.hospitals);
@@ -87,7 +88,7 @@ export default function Result() {
       resolveLocation().then((loc) => isMounted && setUserLocation(loc)).catch(() => {});
     }
     return () => { isMounted = false; };
-  }, [guidance, hospitals.length, state?.category]);
+  }, [guidance, hospitals.length, state?.category, userLocation]);
 
   const fetchGuidance = async () => {
     setLoading(true);
@@ -114,6 +115,11 @@ export default function Result() {
     });
   };
 
+  const handleStepNavigation = (nextIndex) => {
+    setStepDirection(nextIndex > activeStep ? 1 : -1);
+    setActiveStep(nextIndex);
+  };
+
   const handleFeedback = async (rating) => {
     setFeedbackRating(rating);
     const logId = guidance?.queryLogId;
@@ -132,7 +138,6 @@ export default function Result() {
       });
       setFeedbackSubmitted(true);
     } catch {
-      // Non-blocking fallback
       setFeedbackSubmitted(true);
     } finally {
       setSubmittingFeedback(false);
@@ -159,7 +164,7 @@ export default function Result() {
         <p className="text-xs text-slate-500 mb-5">Please return to intake and describe observed symptoms.</p>
         <button
           onClick={() => navigate('/')}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-sky-700 text-white text-xs font-semibold hover:bg-sky-800 transition-colors shadow-xs"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-carbon text-white text-xs font-semibold hover:bg-black transition-colors shadow-2xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Return to Triage Intake</span>
@@ -171,29 +176,29 @@ export default function Result() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] antialiased">
       {/* ── TOP ENCOUNTER COMMAND HEADER ── */}
-      <section className="bg-white border-b border-slate-200/90 px-4 sm:px-6 lg:px-8 py-3 sticky top-14 z-20 shadow-2xs backdrop-blur-sm">
+      <section className="bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 lg:px-8 py-3 sticky top-14 z-20 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 text-xs font-semibold p-1.5 rounded-md hover:bg-slate-100 transition-colors"
+              className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 text-xs font-semibold p-1.5 rounded-lg hover:bg-slate-100 transition-colors shrink-0"
               aria-label="Return to intake"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Intake</span>
             </button>
-            <div className="h-4 w-px bg-slate-200" />
-            <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block truncate">
                 Clinical Protocol Workspace
               </span>
-              <h1 className="text-sm font-bold text-slate-900 truncate max-w-sm sm:max-w-md">
+              <h1 className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
                 "{query}"
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {guidance && (
               <SpeakButton
                 steps={guidance.steps}
@@ -203,9 +208,9 @@ export default function Result() {
             )}
             <a
               href={`tel:${EMERGENCY_NUMBERS.primary}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white text-xs font-bold shadow-2xs transition-colors"
             >
-              <PhoneCall className="w-3 h-3 stroke-[2]" />
+              <PhoneCall className="w-3 h-3 stroke-[2.2]" />
               <span className="hidden sm:inline">Call</span> {EMERGENCY_NUMBERS.primary}
             </a>
           </div>
@@ -221,7 +226,7 @@ export default function Result() {
           </AlertBanner>
         )}
         {guidance?._isFallback && (
-          <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-950 shadow-2xs">
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-950 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-center text-amber-700 shrink-0">
                 <ShieldCheck className="w-4 h-4" />
@@ -233,7 +238,7 @@ export default function Result() {
             </div>
             <button
               onClick={fetchGuidance}
-              className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Retry AI Sync</span>
@@ -254,21 +259,21 @@ export default function Result() {
 
         {/* Error State */}
         {error && !loading && (
-          <div className="bg-white rounded-xl border border-rose-200 p-6 text-center shadow-2xs">
+          <div className="bg-white rounded-2xl border border-rose-200 p-6 text-center shadow-card">
             <AlertTriangle className="w-10 h-10 text-rose-600 mx-auto mb-2.5" />
             <h2 className="text-sm font-bold text-slate-900 mb-1">Clinical Protocol Synthesis Failed</h2>
             <p className="text-xs text-slate-600 mb-4 max-w-md mx-auto">{error}</p>
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={fetchGuidance}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-carbon hover:bg-black text-white text-xs font-semibold shadow-2xs transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Retry Synthesis</span>
               </button>
               <a
                 href={`tel:${EMERGENCY_NUMBERS.primary}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-white text-xs font-bold shadow-2xs transition-colors"
               >
                 <PhoneCall className="w-3.5 h-3.5" />
                 <span>Call {EMERGENCY_NUMBERS.primary}</span>
@@ -293,11 +298,11 @@ export default function Result() {
               <div className="lg:col-span-7 space-y-5">
                 {/* Protocol Progress Card */}
                 {totalSteps > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-card">
                     <div className="flex items-center justify-between text-xs mb-2">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-sky-700 stroke-[2]" />
-                        <span className="font-bold uppercase tracking-wider text-slate-700 text-[11px]">
+                        <ShieldCheck className="w-4 h-4 text-crimson-600 stroke-[2]" />
+                        <span className="font-bold uppercase tracking-wider text-slate-700 text-[11px] font-mono">
                           Action Execution Progress
                         </span>
                       </div>
@@ -308,7 +313,7 @@ export default function Result() {
 
                     <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-sky-700 h-1.5 rounded-full transition-all duration-300"
+                        className="bg-crimson-600 h-1.5 rounded-full transition-all duration-300"
                         style={{ width: `${progressPct}%` }}
                       />
                     </div>
@@ -317,10 +322,10 @@ export default function Result() {
 
                 {/* Immediate Actions Highlight (if present) */}
                 {guidance.immediateActions?.length > 0 && (
-                  <div className="bg-white rounded-xl border-l-4 border-l-rose-700 border-y border-r border-slate-200/90 p-4.5 shadow-2xs space-y-2.5">
+                  <div className="bg-white rounded-2xl border-l-4 border-l-crimson-600 border-y border-r border-slate-200/90 p-4.5 shadow-card space-y-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
-                      <h2 className="text-xs font-bold uppercase tracking-wider text-rose-950">
+                      <span className="w-2 h-2 rounded-full bg-crimson-600 animate-pulse" />
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-rose-950 font-mono">
                         Immediate Prioritized Actions (0–60 Seconds)
                       </h2>
                     </div>
@@ -338,34 +343,45 @@ export default function Result() {
                   </div>
                 )}
 
-                {/* Step-by-Step Sequence */}
+                {/* Step-by-Step Sequence with Directional Slide Window */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
                       Standard Operating Sequence
                     </h2>
                     <span className="text-[11px] text-slate-400">Click card to mark verified</span>
                   </div>
 
-                  {steps.map((step, idx) => (
-                    <StepCard
-                      key={idx}
-                      step={step}
-                      number={idx + 1}
-                      isActive={idx === activeStep}
-                      isCompleted={completedSteps.has(idx + 1)}
-                      onToggle={toggleStep}
-                    />
-                  ))}
+                  <div className="relative overflow-hidden space-y-3">
+                    {steps.map((step, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={false}
+                        animate={{
+                          x: idx === activeStep ? (stepDirection > 0 ? [8, 0] : [-8, 0]) : 0,
+                          opacity: 1,
+                        }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <StepCard
+                          step={step}
+                          number={idx + 1}
+                          isActive={idx === activeStep}
+                          isCompleted={completedSteps.has(idx + 1)}
+                          onToggle={toggleStep}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Step Navigation Controls */}
                 {totalSteps > 1 && (
                   <div className="flex items-center justify-between pt-1">
                     <button
-                      onClick={() => setActiveStep((s) => Math.max(0, s - 1))}
+                      onClick={() => handleStepNavigation(Math.max(0, activeStep - 1))}
                       disabled={activeStep === 0}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-2xs"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
                       <span>Previous Step</span>
@@ -374,9 +390,9 @@ export default function Result() {
                       Step {activeStep + 1} of {totalSteps}
                     </span>
                     <button
-                      onClick={() => setActiveStep((s) => Math.min(totalSteps - 1, s + 1))}
+                      onClick={() => handleStepNavigation(Math.min(totalSteps - 1, activeStep + 1))}
                       disabled={activeStep === totalSteps - 1}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-2xs"
                     >
                       <span>Next Step</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -384,33 +400,44 @@ export default function Result() {
                   </div>
                 )}
 
-                {/* Contraindications / Actions to Avoid */}
+                {/* Contraindications / Actions to Avoid (Sliding Window Accordion) */}
                 {actionsToAvoid.length > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setShowAvoid(!showAvoid)}
-                      className="w-full px-4 py-3 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between text-left"
+                      className="w-full px-4 py-3.5 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between text-left transition-colors hover:bg-slate-50"
                     >
                       <div className="flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-rose-600 stroke-[2]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                        <XCircle className="w-4 h-4 text-crimson-600 stroke-[2]" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800 font-mono">
                           Critical Contraindications & Prohibited Actions
                         </span>
                       </div>
-                      <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showAvoid ? 'rotate-90' : ''}`} />
+                      <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showAvoid ? 'rotate-90' : ''}`} />
                     </button>
 
-                    {showAvoid && (
-                      <div className="p-4 space-y-2 text-xs text-slate-700 bg-white">
-                        {actionsToAvoid.map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-2.5">
-                            <span className="text-rose-600 font-bold">•</span>
-                            <span className="leading-relaxed">{item}</span>
+                    <AnimatePresence initial={false}>
+                      {showAvoid && (
+                        <motion.div
+                          key="avoid-content"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                          className="overflow-hidden bg-white"
+                        >
+                          <div className="p-4 space-y-2 text-xs text-slate-700">
+                            {actionsToAvoid.map((item, idx) => (
+                              <div key={idx} className="flex items-start gap-2.5">
+                                <span className="text-crimson-600 font-bold">•</span>
+                                <span className="leading-relaxed">{item}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
               </div>
@@ -418,17 +445,17 @@ export default function Result() {
               {/* RIGHT COLUMN: Assisted Co-pilot & Hospital Routing (5 Cols) */}
               <div className="lg:col-span-5 space-y-5">
                 {/* ASSISTED INTELLIGENCE DRAWER / CO-PILOT */}
-                <aside className="bg-white rounded-xl border border-sky-200 shadow-2xs overflow-hidden">
-                  <div className="bg-sky-50/70 border-b border-sky-100 px-4 py-3 flex items-center justify-between">
+                <aside className="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden">
+                  <div className="bg-slate-50/80 border-b border-slate-100 px-4 py-3.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-sky-700 flex items-center justify-center text-white">
+                      <div className="w-6 h-6 rounded-lg bg-carbon flex items-center justify-center text-white">
                         <Info className="w-3.5 h-3.5 stroke-[2]" />
                       </div>
                       <div>
-                        <h3 className="text-xs font-bold text-sky-950 uppercase tracking-wider">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono">
                           Decision Support Co-Pilot
                         </h3>
-                        <p className="text-[10px] text-sky-700">
+                        <p className="text-[10px] text-slate-500 font-mono">
                           Grounded in WHO/ERC Guidelines · Latency: {guidance.responseTimeMs || 18}ms
                         </p>
                       </div>
@@ -436,7 +463,7 @@ export default function Result() {
 
                     <button
                       onClick={() => setOverrideActive(!overrideActive)}
-                      className={`text-[10px] font-semibold px-2 py-1 rounded border transition-colors ${
+                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-colors ${
                         overrideActive
                           ? 'bg-amber-100 border-amber-300 text-amber-900'
                           : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -449,8 +476,8 @@ export default function Result() {
                   <div className="p-4 space-y-4 text-xs">
                     {/* Watch For Banner */}
                     {watchFor.length > 0 && (
-                      <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-200/90 text-amber-950 space-y-1.5">
-                        <div className="flex items-center gap-1.5 font-bold text-amber-950 text-[11px] uppercase tracking-wider">
+                      <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-950 space-y-1.5 shadow-2xs">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-950 text-[11px] uppercase tracking-wider font-mono">
                           <AlertTriangle className="w-3.5 h-3.5 text-amber-700 stroke-[2]" />
                           <span>Monitor in Next 10 Minutes</span>
                         </div>
@@ -468,13 +495,13 @@ export default function Result() {
                     {/* Common Bystander Pitfalls */}
                     {mistakes.length > 0 && (
                       <div className="space-y-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block font-mono">
                           Frequent Bystander Errors to Prevent
                         </span>
                         <ul className="space-y-1.5 text-slate-600 text-xs">
                           {mistakes.map((m, idx) => (
                             <li key={idx} className="flex items-start gap-2">
-                              <span className="text-rose-600 font-bold">•</span>
+                              <span className="text-crimson-600 font-bold">•</span>
                               <span className="leading-relaxed">{m}</span>
                             </li>
                           ))}
@@ -493,46 +520,56 @@ export default function Result() {
                       </span>
                     </div>
 
+                    {/* Sliding Evidence Citations Window */}
                     {guidance.sourceReferences?.length > 0 && (
                       <div className="pt-2 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => setShowSources(!showSources)}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:underline"
+                          className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 hover:text-crimson-600 transition-colors"
                         >
-                          <ChevronRight className={`w-3 h-3 transition-transform ${showSources ? 'rotate-90' : ''}`} />
+                          <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showSources ? 'rotate-90' : ''}`} />
                           <span>Clinical Evidence Citations ({guidance.sourceReferences.length})</span>
                         </button>
-                        {showSources && (
-                          <div className="mt-2 space-y-1.5 pl-3 border-l-2 border-sky-200">
-                            {guidance.sourceReferences.map((ref, idx) => (
-                              <a
-                                key={idx}
-                                href={ref.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-[11px] text-sky-700 hover:underline"
-                              >
-                                <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                                <span>{ref.title}</span>
-                              </a>
-                            ))}
-                          </div>
-                        )}
+                        <AnimatePresence initial={false}>
+                          {showSources && (
+                            <motion.div
+                              key="sources-content"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                              className="overflow-hidden mt-2 space-y-1.5 pl-3 border-l-2 border-slate-200"
+                            >
+                              {guidance.sourceReferences.map((ref, idx) => (
+                                <a
+                                  key={idx}
+                                  href={ref.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1.5 text-[11px] text-slate-600 hover:text-crimson-600 transition-colors block truncate"
+                                >
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                  <span>{ref.title}</span>
+                                </a>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
                 </aside>
 
                 {/* SPECIALTY ROUTING / ACCIDENT HOSPITALS */}
-                <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+                <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/60 flex items-center justify-center text-rose-700">
+                      <div className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200/60 flex items-center justify-center text-crimson-700">
                         <Building2 className="w-4 h-4 stroke-[2]" />
                       </div>
                       <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-mono">
                           Accident Response Facilities
                         </h3>
                         <p className="text-[11px] text-slate-500">
@@ -562,9 +599,9 @@ export default function Result() {
                         href={`https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/hospital`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm text-sky-800 hover:text-sky-900 text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-slate-200 z-10 flex items-center gap-1 transition-colors"
+                        className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm text-slate-800 hover:text-black text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-slate-200 z-10 flex items-center gap-1 transition-colors"
                       >
-                        <Navigation className="w-3 h-3 text-sky-600" />
+                        <Navigation className="w-3 h-3 text-crimson-600" />
                         <span>Open in Google Maps</span>
                       </a>
                     </div>
@@ -573,7 +610,7 @@ export default function Result() {
                   {/* Hospital Cards List */}
                   {loadingHospitals && nearbyHospitals.length === 0 ? (
                     <div className="py-6 text-center text-xs text-slate-500 font-medium space-y-1">
-                      <div className="w-5 h-5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <div className="w-5 h-5 border-2 border-crimson-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                       <span>Locating emergency bays equipped for this injury...</span>
                     </div>
                   ) : nearbyHospitals.length === 0 ? (
@@ -598,7 +635,7 @@ export default function Result() {
                                 )}
                               </div>
                               {h.matchReason && (
-                                <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200/60 text-[10px] font-semibold">
+                                <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-rose-50 text-crimson-700 border border-rose-200/60 text-[10px] font-semibold">
                                   <span>✓ {h.matchReason}</span>
                                 </div>
                               )}
@@ -624,7 +661,7 @@ export default function Result() {
                             {h.phone ? (
                               <a
                                 href={`tel:${h.phone}`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition-colors border border-rose-200/60"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-crimson-700 font-bold text-[11px] transition-colors border border-rose-200/60"
                               >
                                 <PhoneCall className="w-3 h-3 stroke-[2.2]" />
                                 <span>Casualty: {h.phone}</span>
@@ -639,7 +676,7 @@ export default function Result() {
                               href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(h.name + ' ' + (h.address || ''))}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-bold text-[11px] transition-colors shadow-2xs ml-auto"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-carbon hover:bg-black text-white font-bold text-[11px] transition-colors shadow-2xs ml-auto"
                             >
                               <Navigation className="w-3 h-3 stroke-[2.2]" />
                               <span>Route / Navigate</span>
@@ -652,8 +689,8 @@ export default function Result() {
                 </section>
 
                 {/* CLINICAL AUDIT & FEEDBACK */}
-                <section className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs space-y-2.5 text-center">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                <section className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-card space-y-2.5 text-center">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block font-mono">
                     Protocol Utility Audit
                   </span>
                   <p className="text-xs text-slate-600">
@@ -661,7 +698,7 @@ export default function Result() {
                   </p>
 
                   {feedbackSubmitted ? (
-                    <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-200">
+                    <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-200">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                       <span>Audit rating recorded in clinical log</span>
                     </div>

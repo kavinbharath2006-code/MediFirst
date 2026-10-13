@@ -27,8 +27,6 @@ import {
   Radio,
   Hospital,
   Truck,
-  Menu,
-  X,
 } from 'lucide-react';
 import { EMERGENCY_NUMBERS } from '../data/constants';
 
@@ -170,11 +168,11 @@ const FAQ_ITEMS = [
    ANIMATION VARIANTS
 ───────────────────────────────────────────────────────────── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 22 },
+  hidden: { opacity: 0, y: 16 },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.55, ease: [0.16, 1, 0.3, 1] },
+    transition: { delay: i * 0.07, duration: 0.3, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
@@ -212,35 +210,32 @@ export default function EmergencyHeroLandingPage() {
 
   return (
     <div className="min-h-screen bg-alabaster text-carbon font-sans selection:bg-red-100 selection:text-crimson-800">
-
       {/* ══════════════════════════════════════════════════════════
           SECTION 1 — HERO
       ══════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-white border-b border-slate-200/60">
-
-        {/* Decorative grid pattern */}
+        {/* Subtle grid pattern */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.025]"
+          className="absolute inset-0 pointer-events-none opacity-[0.02]"
           style={{
             backgroundImage: `linear-gradient(#0F172A 1px, transparent 1px), linear-gradient(90deg, #0F172A 1px, transparent 1px)`,
             backgroundSize: '40px 40px',
           }}
         />
-        {/* Crimson corner glow — very subtle */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_top_right,rgba(220,38,38,0.06),transparent_65%)] pointer-events-none" />
+        {/* Crimson subtle corner glow */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_top_right,rgba(220,38,38,0.05),transparent_65%)] pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-20 pb-24 lg:pt-28 lg:pb-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-16 pb-20 lg:pt-24 lg:pb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* ── Left: Editorial Copy ──────────────────────── */}
             <motion.div
               initial="hidden"
               animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+              variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
             >
               {/* Micro-label */}
               <motion.div variants={fadeUp} custom={0}>
-                <span className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-crimson-600 mb-6 block">
+                <span className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-crimson-600 mb-5 block">
                   <span className="text-slate-300">✦</span>
                   MediFirst Emergency Intelligence
                 </span>
@@ -250,7 +245,7 @@ export default function EmergencyHeroLandingPage() {
               <motion.h1
                 variants={fadeUp}
                 custom={1}
-                className="text-[2.75rem] sm:text-5xl lg:text-[3.5rem] font-black tracking-[-0.035em] leading-[1.05] text-carbon mb-6"
+                className="text-[2.6rem] sm:text-5xl lg:text-[3.5rem] font-black tracking-[-0.035em] leading-[1.05] text-carbon mb-5"
               >
                 Built for Urgency.
                 <br />
@@ -263,7 +258,7 @@ export default function EmergencyHeroLandingPage() {
               <motion.p
                 variants={fadeUp}
                 custom={2}
-                className="text-slate-500 text-base sm:text-lg leading-relaxed max-w-lg mb-10 font-normal"
+                className="text-slate-500 text-base sm:text-lg leading-relaxed max-w-lg mb-8 font-normal"
               >
                 Your clinical-grade first-response system for CPR, trauma,
                 anaphylaxis, and stroke — delivering step-by-step guidance
@@ -274,10 +269,10 @@ export default function EmergencyHeroLandingPage() {
               <motion.div
                 variants={fadeUp}
                 custom={3}
-                className="flex flex-col sm:flex-row items-start gap-3"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
               >
                 <button onClick={scrollToForm} className="btn-primary pulse-ring">
-                  Start Instant Triage
+                  <span>Start Instant Triage</span>
                   <ArrowRight size={16} />
                 </button>
                 <a
@@ -285,16 +280,20 @@ export default function EmergencyHeroLandingPage() {
                   className="btn-ghost"
                 >
                   <PhoneCall size={14} className="text-crimson-600" />
-                  Dial 108 Ambulance
+                  <span>Dial 108 Ambulance</span>
                 </a>
               </motion.div>
 
               {/* Trust strip */}
-              <motion.div variants={fadeUp} custom={4} className="mt-10 flex items-center gap-4">
-                <div className="flex -space-x-2">
-                  {['#DC2626','#0F172A','#475569'].map((c, i) => (
-                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-white text-[9px] font-bold" style={{ background: c }}>
-                      {['WHO','ERC','WHO'][i][0]}
+              <motion.div variants={fadeUp} custom={4} className="mt-8 flex items-center gap-3.5">
+                <div className="flex -space-x-1.5">
+                  {['#DC2626', '#0F172A', '#475569'].map((c, i) => (
+                    <div
+                      key={i}
+                      className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-white text-[8px] font-bold shadow-2xs"
+                      style={{ background: c }}
+                    >
+                      {['WHO', 'ERC', 'TCCC'][i][0]}
                     </div>
                   ))}
                 </div>
@@ -308,7 +307,7 @@ export default function EmergencyHeroLandingPage() {
             <motion.div
               initial="hidden"
               animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.14 } } }}
+              variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
               className="flex flex-col gap-4"
             >
               {HERO_STEP_CARDS.map((card, i) => (
@@ -316,28 +315,28 @@ export default function EmergencyHeroLandingPage() {
                   key={card.num}
                   variants={fadeUp}
                   custom={i}
-                  className="bg-white border border-slate-200/90 rounded-[28px] p-8 shadow-card hover:shadow-elevated transition-shadow duration-300 group"
+                  className="bg-white border border-slate-200/90 rounded-2xl p-7 shadow-card hover:shadow-elevated transition-shadow duration-200 group"
                 >
                   {/* Number + Tag */}
-                  <div className="flex items-start justify-between mb-5">
-                    <span className="font-mono font-black text-[2.5rem] leading-none text-slate-100 select-none">
+                  <div className="flex items-start justify-between mb-4">
+                    <span className="font-mono font-black text-3xl leading-none text-slate-200 select-none">
                       {card.num}
                     </span>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-red-50 text-crimson-600 border border-red-200/60">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-50 text-crimson-600 border border-red-200/60">
                       {card.tag}
                     </span>
                   </div>
 
                   {/* Crimson rule */}
-                  <div className="w-8 h-[3px] bg-crimson-600 rounded-full mb-4" />
+                  <div className="w-8 h-[2.5px] bg-crimson-600 rounded-full mb-3.5" />
 
                   {/* Title */}
-                  <h3 className="font-bold text-[1.15rem] text-carbon tracking-tight mb-3 leading-snug group-hover:text-crimson-700 transition-colors">
+                  <h3 className="font-bold text-base sm:text-lg text-carbon tracking-tight mb-2 leading-snug group-hover:text-crimson-700 transition-colors">
                     {card.title}
                   </h3>
 
                   {/* Body */}
-                  <p className="text-slate-500 text-sm leading-relaxed">{card.body}</p>
+                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">{card.body}</p>
                 </motion.div>
               ))}
 
@@ -345,21 +344,20 @@ export default function EmergencyHeroLandingPage() {
               <motion.div
                 variants={fadeUp}
                 custom={2}
-                className="grid grid-cols-3 gap-3 mt-1"
+                className="grid grid-cols-3 gap-2.5 mt-1"
               >
                 {[
                   { val: '< 18 ms', lbl: 'Protocol latency' },
                   { val: '5.8 min', lbl: 'Avg. EMS arrival' },
-                  { val: '54+',     lbl: 'Verified hospitals' },
+                  { val: '54+', lbl: 'Verified hospitals' },
                 ].map((m) => (
-                  <div key={m.val} className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 text-center">
-                    <div className="font-black text-lg text-carbon tracking-tight">{m.val}</div>
-                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mt-0.5">{m.lbl}</div>
+                  <div key={m.val} className="bg-slate-50 border border-slate-200/70 rounded-xl p-3 text-center">
+                    <div className="font-black text-base sm:text-lg text-carbon tracking-tight">{m.val}</div>
+                    <div className="text-[9px] text-slate-400 font-mono uppercase tracking-wider mt-0.5">{m.lbl}</div>
                   </div>
                 ))}
               </motion.div>
             </motion.div>
-
           </div>
         </div>
       </section>
@@ -367,16 +365,15 @@ export default function EmergencyHeroLandingPage() {
       {/* ══════════════════════════════════════════════════════════
           SECTION 2 — FIRST-AID PROTOCOLS GRID
       ══════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-5 sm:px-8 lg:px-12 bg-[#FAFAFA]">
+      <section className="py-20 px-5 sm:px-8 lg:px-12 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto">
-
           {/* Header */}
-          <div className="mb-14 max-w-xl">
-            <span className="section-label-crimson mb-3 block">✦ Emergency Protocols</span>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-4">
+          <div className="mb-12 max-w-xl">
+            <span className="section-label-crimson mb-2.5 block">✦ Emergency Protocols</span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-3">
               Critical Scenario Reference
             </h2>
-            <p className="text-slate-500 text-base leading-relaxed">
+            <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
               Immediate action frameworks for the four most time-sensitive
               pre-hospital emergencies, verified against international care standards.
             </p>
@@ -389,19 +386,19 @@ export default function EmergencyHeroLandingPage() {
               return (
                 <motion.div
                   key={card.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ delay: i * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="bg-white border border-slate-200/90 rounded-[28px] p-7 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-300 flex flex-col"
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ delay: i * 0.06, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                  className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-card hover:shadow-elevated transition-all duration-200 flex flex-col group"
                 >
                   {/* Icon */}
-                  <div className={`w-11 h-11 ${card.iconBg} rounded-2xl flex items-center justify-center mb-5 shadow-sm`}>
-                    <Icon size={20} className="text-white" />
+                  <div className={`w-10 h-10 ${card.iconBg} rounded-xl flex items-center justify-center mb-4 shadow-2xs`}>
+                    <Icon size={18} className="text-white" />
                   </div>
 
                   {/* Tags */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
                     <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-50 text-crimson-700 border border-red-200/50">
                       {card.urgency}
                     </span>
@@ -414,15 +411,18 @@ export default function EmergencyHeroLandingPage() {
                   <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest mb-1">{card.category}</span>
 
                   {/* Title */}
-                  <h3 className="font-bold text-base text-carbon mb-2.5 leading-snug tracking-tight">{card.title}</h3>
+                  <h3 className="font-bold text-base text-carbon mb-2 leading-snug tracking-tight group-hover:text-crimson-600 transition-colors">
+                    {card.title}
+                  </h3>
 
                   {/* Body */}
-                  <p className="text-slate-500 text-sm leading-relaxed flex-1">{card.body}</p>
+                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed flex-1">{card.body}</p>
 
                   {/* Footer link */}
-                  <button className="mt-5 flex items-center gap-1.5 text-xs font-bold text-crimson-600 hover:text-crimson-700 transition-colors self-start">
-                    Full Protocol <ChevronRight size={13} />
-                  </button>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1 text-xs font-bold text-crimson-600 group-hover:text-crimson-700 transition-colors">
+                    <span>Full Protocol</span>
+                    <ChevronRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </motion.div>
               );
             })}
@@ -433,35 +433,34 @@ export default function EmergencyHeroLandingPage() {
       {/* ══════════════════════════════════════════════════════════
           SECTION 3 — DISPATCH TIMELINE
       ══════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-5 sm:px-8 lg:px-12 bg-white border-y border-slate-200/60">
+      <section className="py-20 px-5 sm:px-8 lg:px-12 bg-white border-y border-slate-200/60">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: editorial copy */}
             <div>
-              <span className="section-label-crimson mb-3 block">✦ Emergency Dispatch Pipeline</span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-5">
+              <span className="section-label-crimson mb-2.5 block">✦ Emergency Dispatch Pipeline</span>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-4">
                 From Triage to
                 <br />
                 Ambulance in Seconds
               </h2>
-              <p className="text-slate-500 text-base leading-relaxed mb-8 max-w-md">
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-8 max-w-md">
                 The moment you submit an emergency, our dispatch pipeline activates
                 a four-stage relay that pre-positions hospital resources before
                 the ambulance even departs.
               </p>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 {[
-                  { val: '< 1 s',  lbl: 'Dispatch transmission' },
+                  { val: '< 1 s', lbl: 'Dispatch transmission' },
                   { val: '24 / 7', lbl: 'Active relay nodes' },
                   { val: '1.4 km', lbl: 'Avg. nearest trauma hub' },
-                  { val: '99.8%',  lbl: 'Uptime SLA' },
+                  { val: '99.8%', lbl: 'Uptime SLA' },
                 ].map((s) => (
-                  <div key={s.val} className="p-5 bg-slate-50 border border-slate-200/60 rounded-2xl">
-                    <div className="font-black text-2xl text-carbon tracking-tight">{s.val}</div>
-                    <div className="text-xs text-slate-400 font-mono uppercase tracking-wider mt-1">{s.lbl}</div>
+                  <div key={s.val} className="p-4 bg-slate-50 border border-slate-200/60 rounded-xl">
+                    <div className="font-black text-xl text-carbon tracking-tight">{s.val}</div>
+                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mt-0.5">{s.lbl}</div>
                   </div>
                 ))}
               </div>
@@ -469,7 +468,6 @@ export default function EmergencyHeroLandingPage() {
 
             {/* Right: Vertical Timeline */}
             <DispatchTimeline milestones={DISPATCH_MILESTONES} />
-
           </div>
         </div>
       </section>
@@ -477,23 +475,22 @@ export default function EmergencyHeroLandingPage() {
       {/* ══════════════════════════════════════════════════════════
           SECTION 4 — FAQ ACCORDION
       ══════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-5 sm:px-8 lg:px-12 bg-[#FAFAFA]">
+      <section className="py-20 px-5 sm:px-8 lg:px-12 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-16">
-
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
             {/* Left: Section header */}
             <div className="lg:col-span-2">
-              <span className="section-label-crimson mb-3 block">✦ Medical Safety & Protocol</span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-5">
+              <span className="section-label-crimson mb-2.5 block">✦ Medical Safety & Protocol</span>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight mb-4">
                 Frequently Asked
                 <br />
                 Clinical Questions
               </h2>
-              <p className="text-slate-500 text-base leading-relaxed mb-8">
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-6">
                 Plain-language answers to the most critical pre-hospital
                 decision points — verified against WHO and ERC guidelines.
               </p>
-              <div className="p-5 bg-white border border-slate-200/80 rounded-2xl flex items-start gap-3">
+              <div className="p-4 bg-white border border-slate-200/80 rounded-xl flex items-start gap-3 shadow-2xs">
                 <ShieldCheck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-500 leading-relaxed">
                   All answers validated against WHO Emergency Care standards,
@@ -503,7 +500,7 @@ export default function EmergencyHeroLandingPage() {
             </div>
 
             {/* Right: Accordion list */}
-            <div className="lg:col-span-3 space-y-2">
+            <div className="lg:col-span-3 space-y-2.5">
               {FAQ_ITEMS.map((item, i) => (
                 <FaqAccordion
                   key={item.id}
@@ -514,7 +511,6 @@ export default function EmergencyHeroLandingPage() {
                 />
               ))}
             </div>
-
           </div>
         </div>
       </section>
@@ -524,13 +520,12 @@ export default function EmergencyHeroLandingPage() {
       ══════════════════════════════════════════════════════════ */}
       <section
         ref={formRef}
-        className="py-24 px-5 sm:px-8 lg:px-12 bg-white border-t border-slate-200/60"
+        className="py-20 px-5 sm:px-8 lg:px-12 bg-white border-t border-slate-200/60"
       >
         <div className="max-w-7xl mx-auto">
-
           {/* Header */}
-          <div className="mb-12">
-            <span className="section-label-crimson mb-3 block">✦ Emergency Intake & SOS Dispatch</span>
+          <div className="mb-10">
+            <span className="section-label-crimson mb-2.5 block">✦ Emergency Intake & SOS Dispatch</span>
             <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.03em] text-carbon leading-tight">
               Request Emergency Response
             </h2>
@@ -538,57 +533,75 @@ export default function EmergencyHeroLandingPage() {
 
           {/* Dual-card layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
             {/* Left: intake form — Porcelain white */}
-            <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-[32px] p-8 lg:p-10 shadow-card">
-              <div className="flex items-center justify-between pb-7 mb-7 border-b border-slate-100">
+            <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-card">
+              <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
                 <div>
                   <span className="section-label block mb-1">Telemetry Dispatch Form</span>
-                  <h3 className="text-xl font-black text-carbon tracking-tight">Emergency Unit Request</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-carbon tracking-tight">Emergency Unit Request</h3>
                 </div>
-                <div className="w-10 h-10 bg-red-50 border border-red-200/60 rounded-2xl flex items-center justify-center">
-                  <AlertTriangle size={18} className="text-crimson-600" />
+                <div className="w-9 h-9 bg-red-50 border border-red-200/60 rounded-xl flex items-center justify-center">
+                  <AlertTriangle size={17} className="text-crimson-600" />
                 </div>
               </div>
 
-              {dispatched ? (
-                <DispatchSuccess onReset={() => setDispatched(false)} />
-              ) : (
-                <IntakeForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  isSubmitting={isSubmitting}
-                  onSubmit={handleDispatch}
-                />
-              )}
+              {/* Smooth sliding window transition between Form and Success */}
+              <AnimatePresence mode="wait">
+                {dispatched ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <DispatchSuccess onReset={() => setDispatched(false)} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <IntakeForm
+                      formData={formData}
+                      setFormData={setFormData}
+                      isSubmitting={isSubmitting}
+                      onSubmit={handleDispatch}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Right: SOS stat card — Deep Crimson */}
-            <div className="lg:col-span-5 bg-crimson-600 rounded-[32px] p-8 lg:p-10 text-white flex flex-col gap-6 relative overflow-hidden">
+            <div className="lg:col-span-5 bg-crimson-600 rounded-2xl p-6 sm:p-8 text-white flex flex-col gap-5 relative overflow-hidden shadow-elevated">
               {/* Decorative overlay */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(0,0,0,0.18),transparent_70%)] pointer-events-none" />
-              <div className="absolute top-0 right-0 w-48 h-48 bg-crimson-800/40 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-44 h-44 bg-crimson-800/40 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
               <div className="relative">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-red-200 block mb-1">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-red-200 block mb-1">
                   Response Status
                 </span>
-                <h3 className="text-2xl font-black tracking-tight leading-tight">24 / 7 Response<br />Active</h3>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">24 / 7 Response<br />Active</h3>
               </div>
 
               {/* Live stats */}
-              <div className="relative space-y-4">
+              <div className="relative space-y-3">
                 {[
-                  { icon: Clock,    val: '5.8 min',  lbl: 'Avg. Paramedic En Route' },
-                  { icon: Hospital, val: '1.4 km',   lbl: 'Nearest Trauma Hub' },
-                  { icon: Radio,    val: '99.8%',    lbl: 'Relay Uptime' },
+                  { icon: Clock, val: '5.8 min', lbl: 'Avg. Paramedic En Route' },
+                  { icon: Hospital, val: '1.4 km', lbl: 'Nearest Trauma Hub' },
+                  { icon: Radio, val: '99.8%', lbl: 'Relay Uptime' },
                 ].map(({ icon: Icon, val, lbl }) => (
-                  <div key={lbl} className="flex items-center gap-4 bg-crimson-700/40 border border-crimson-500/30 rounded-2xl p-4">
-                    <div className="w-9 h-9 bg-crimson-800/50 rounded-xl flex items-center justify-center shrink-0">
-                      <Icon size={16} className="text-red-100" />
+                  <div key={lbl} className="flex items-center gap-3.5 bg-crimson-700/40 border border-crimson-500/30 rounded-xl p-3.5">
+                    <div className="w-8 h-8 bg-crimson-800/50 rounded-lg flex items-center justify-center shrink-0">
+                      <Icon size={15} className="text-red-100" />
                     </div>
                     <div>
-                      <div className="font-black text-lg leading-none">{val}</div>
+                      <div className="font-black text-base sm:text-lg leading-none">{val}</div>
                       <div className="text-[10px] text-red-200 font-mono uppercase tracking-wider mt-0.5">{lbl}</div>
                     </div>
                   </div>
@@ -598,13 +611,12 @@ export default function EmergencyHeroLandingPage() {
               {/* Direct trauma hotline */}
               <a
                 href={`tel:${EMERGENCY_NUMBERS.primary}`}
-                className="relative flex items-center justify-center gap-2.5 bg-white text-crimson-700 font-black text-sm py-4 rounded-2xl hover:bg-red-50 transition-colors mt-auto"
+                className="relative flex items-center justify-center gap-2 bg-white text-crimson-700 font-black text-xs sm:text-sm py-3.5 rounded-xl hover:bg-red-50 transition-colors mt-auto shadow-sm"
               >
                 <PhoneCall size={16} />
-                Direct Trauma Hotline · {EMERGENCY_NUMBERS.primary}
+                <span>Direct Trauma Hotline · {EMERGENCY_NUMBERS.primary}</span>
               </a>
             </div>
-
           </div>
         </div>
       </section>
@@ -634,7 +646,6 @@ export default function EmergencyHeroLandingPage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
@@ -648,24 +659,24 @@ function DispatchTimeline({ milestones }) {
       {/* Crimson vertical rule */}
       <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-crimson-600 via-crimson-300 to-slate-200 rounded-full" />
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {milestones.map((m, i) => {
           const Icon = m.icon;
           const isComplete = m.status === 'complete';
-          const isActive   = m.status === 'active';
+          const isActive = m.status === 'active';
 
           return (
             <motion.div
               key={m.id}
-              initial={{ opacity: 0, x: -16 }}
+              initial={{ opacity: 0, x: -14 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ delay: i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative flex items-start gap-5 pl-8"
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ delay: i * 0.08, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex items-start gap-4 pl-8"
             >
               {/* Milestone circle */}
               <div
-                className={`absolute left-0 top-0 w-9 h-9 rounded-full flex items-center justify-center border-2 shadow-sm z-10 ${
+                className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center border-2 shadow-2xs z-10 ${
                   isComplete
                     ? 'bg-crimson-600 border-crimson-600 text-white'
                     : isActive
@@ -673,11 +684,11 @@ function DispatchTimeline({ milestones }) {
                     : 'bg-white border-slate-200 text-slate-400'
                 }`}
               >
-                <Icon size={16} />
+                <Icon size={14} />
               </div>
 
               {/* Content */}
-              <div className={`flex-1 pb-2 pt-1.5 transition-all ${isActive ? 'opacity-100' : isComplete ? 'opacity-100' : 'opacity-40'}`}>
+              <div className={`flex-1 pb-2 pt-0.5 transition-all ${isActive ? 'opacity-100' : isComplete ? 'opacity-100' : 'opacity-40'}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`font-bold text-sm tracking-tight ${isComplete ? 'text-carbon' : isActive ? 'text-carbon' : 'text-slate-400'}`}>
                     {m.label}
@@ -695,7 +706,7 @@ function DispatchTimeline({ milestones }) {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">{m.sub}</p>
-                <span className="text-[10px] font-mono text-slate-300 mt-1 block">T+{m.time}</span>
+                <span className="text-[10px] font-mono text-slate-300 mt-0.5 block">T+{m.time}</span>
               </div>
             </motion.div>
           );
@@ -711,33 +722,33 @@ function DispatchTimeline({ milestones }) {
 function FaqAccordion({ item, index, isOpen, onToggle }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ delay: index * 0.06, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ delay: index * 0.05, duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+      className={`rounded-xl border transition-colors duration-200 overflow-hidden ${
         isOpen
-          ? 'border-crimson-200 bg-red-50/40 shadow-sm'
+          ? 'border-crimson-200 bg-red-50/30 shadow-2xs'
           : 'border-slate-200/80 bg-white hover:border-slate-300'
       }`}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson-500 focus-visible:ring-inset"
+        className="w-full px-5 py-4 flex items-center justify-between text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson-500 focus-visible:ring-inset"
         aria-expanded={isOpen}
       >
-        <span className={`text-sm font-semibold leading-snug pr-4 ${isOpen ? 'text-carbon' : 'text-slate-700'}`}>
+        <span className={`text-xs sm:text-sm font-semibold leading-snug pr-3 ${isOpen ? 'text-carbon' : 'text-slate-700'}`}>
           {item.question}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center border transition-colors ${
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition-colors ${
             isOpen ? 'bg-crimson-600 border-crimson-600 text-white' : 'border-slate-200 text-slate-400'
           }`}
         >
-          <ChevronDown size={14} />
+          <ChevronDown size={13} />
         </motion.div>
       </button>
 
@@ -748,12 +759,12 @@ function FaqAccordion({ item, index, isOpen, onToggle }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-6 pt-0">
-              <div className="w-full h-px bg-red-100 mb-4" />
-              <p className="text-sm text-slate-600 leading-relaxed">{item.answer}</p>
+            <div className="px-5 pb-5 pt-0">
+              <div className="w-full h-px bg-red-100 mb-3" />
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{item.answer}</p>
             </div>
           </motion.div>
         )}
@@ -766,14 +777,13 @@ function FaqAccordion({ item, index, isOpen, onToggle }) {
    SUB-COMPONENT: Intake Form
 ───────────────────────────────────────────────────────────── */
 function IntakeForm({ formData, setFormData, isSubmitting, onSubmit }) {
-  const inputCls = 'w-full bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 text-sm text-carbon font-medium focus:outline-none focus:ring-2 focus:ring-crimson-500 focus:border-crimson-300 transition-all placeholder:text-slate-400';
-  const labelCls = 'block text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-slate-500 mb-2';
+  const inputCls = 'w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-carbon font-medium focus:outline-none focus:ring-2 focus:ring-crimson-500 focus:border-crimson-300 transition-all placeholder:text-slate-400';
+  const labelCls = 'block text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-slate-500 mb-1.5';
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-
+    <form onSubmit={onSubmit} className="space-y-4">
       {/* Row 1: Condition + Age */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
           <label className={labelCls}>Patient Condition</label>
           <select
@@ -794,7 +804,8 @@ function IntakeForm({ formData, setFormData, isSubmitting, onSubmit }) {
           <label className={labelCls}>Estimated Age</label>
           <input
             type="number"
-            min="0" max="120"
+            min="0"
+            max="120"
             value={formData.age}
             onChange={(e) => setFormData({ ...formData, age: e.target.value })}
             className={inputCls}
@@ -811,11 +822,11 @@ function IntakeForm({ formData, setFormData, isSubmitting, onSubmit }) {
             type="text"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className={`${inputCls} pl-10`}
+            className={`${inputCls} pl-9`}
             placeholder="Street address or GPS coordinates"
             required
           />
-          <Navigation size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+          <Navigation size={15} className="absolute left-3 top-3 text-slate-400" />
         </div>
       </div>
 
@@ -847,21 +858,20 @@ function IntakeForm({ formData, setFormData, isSubmitting, onSubmit }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-4 rounded-2xl font-black text-sm tracking-wide uppercase transition-all duration-200 flex items-center justify-center gap-2.5 bg-crimson-600 text-white hover:bg-crimson-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md hover:shadow-crimson-600/25"
+        className="w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm tracking-wide uppercase transition-all duration-200 flex items-center justify-center gap-2 bg-crimson-600 text-white hover:bg-crimson-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md hover:shadow-crimson-600/20"
       >
         {isSubmitting ? (
           <>
-            <Activity size={17} className="animate-spin" />
-            Transmitting Emergency Packet…
+            <Activity size={16} className="animate-spin" />
+            <span>Transmitting Emergency Packet…</span>
           </>
         ) : (
           <>
-            Dispatch Emergency Response
-            <ChevronRight size={17} />
+            <span>Dispatch Emergency Response</span>
+            <ChevronRight size={16} />
           </>
         )}
       </button>
-
     </form>
   );
 }
@@ -871,26 +881,21 @@ function IntakeForm({ formData, setFormData, isSubmitting, onSubmit }) {
 ───────────────────────────────────────────────────────────── */
 function DispatchSuccess({ onReset }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-8 text-center"
-    >
-      <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 size={30} className="text-emerald-600" />
+    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 sm:p-8 text-center">
+      <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3.5">
+        <CheckCircle2 size={26} className="text-emerald-600" />
       </div>
-      <h3 className="text-xl font-black text-emerald-900 mb-2">Emergency Dispatch Transmitted</h3>
-      <p className="text-sm text-emerald-700 max-w-md mx-auto leading-relaxed mb-6">
+      <h3 className="text-lg font-bold text-emerald-950 mb-1.5">Emergency Dispatch Transmitted</h3>
+      <p className="text-xs sm:text-sm text-emerald-800 max-w-md mx-auto leading-relaxed mb-5">
         Paramedic crew alerted with GPS packet. Nearest hospital casualty unit
         pre-notified. Keep your phone accessible for the responding crew.
       </p>
       <button
         onClick={onReset}
-        className="px-7 py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs tracking-wider uppercase hover:bg-emerald-700 transition-colors"
+        className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs tracking-wider uppercase hover:bg-emerald-700 transition-colors shadow-2xs"
       >
         Reset Dispatch Form
       </button>
-    </motion.div>
+    </div>
   );
 }

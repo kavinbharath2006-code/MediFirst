@@ -12,15 +12,41 @@
 }
 
 :root {
-  --crimson:        #DC2626;
-  --crimson-dark:   #991B1B;
-  --carbon:         #0F172A;
-  --slate-soft:     #475569;
-  --alabaster:      #FAFAFA;
-  --porcelain:      #FBFBFB;
-  --stroke:         rgba(15, 23, 42, 0.08);
-  --shadow-card:    0 1px 3px rgba(15,23,42,0.06), 0 4px 24px rgba(15,23,42,0.04);
-  --shadow-elevated: 0 4px 6px rgba(15,23,42,0.04), 0 12px 40px rgba(15,23,42,0.08);
+  /* Brand Tokens: Crimson, Carbon & Porcelain */
+  --crimson:             #DC2626;
+  --crimson-hover:       #B91C1C;
+  --crimson-dark:        #991B1B;
+  --crimson-subtle:      #FEF2F2;
+  --crimson-border:      #FECDD3;
+
+  --carbon:              #0F172A;
+  --carbon-surface:      #1E293B;
+  --carbon-muted:        #334155;
+
+  --porcelain:           #FBFBFB;
+  --alabaster:           #FAFAFA;
+  --surface-ground:      #F8FAFC;
+  --surface-card:        #FFFFFF;
+  --surface-subtle:      #F1F5F9;
+
+  --slate-text-primary:  #0F172A;
+  --slate-text-secondary:#475569;
+  --slate-text-muted:    #64748B;
+  --slate-text-subtle:   #94A3B8;
+
+  --stroke-subtle:       rgba(15, 23, 42, 0.06);
+  --stroke-default:      rgba(15, 23, 42, 0.10);
+  --stroke-strong:       rgba(15, 23, 42, 0.16);
+
+  --shadow-card:         0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 18px rgba(15, 23, 42, 0.03);
+  --shadow-elevated:     0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 10px 24px -2px rgba(15, 23, 42, 0.06);
+  --shadow-2xs:          0 1px 2px 0 rgba(15, 23, 42, 0.03);
+
+  /* Animation Tokens */
+  --ease-clinical:       cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:            180ms;
+  --dur-normal:          240ms;
+  --dur-smooth:          300ms;
 }
 
 html {
@@ -29,11 +55,21 @@ html {
 
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--alabaster);
-  color: var(--carbon);
+  background-color: var(--surface-ground);
+  color: var(--slate-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+}
+
+/* ── Accessibility: Reduced Motion ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Scrollbar ─────────────────────────────────── */
@@ -59,73 +95,72 @@ body {
   box-shadow: var(--shadow-elevated);
 }
 .shadow-2xs {
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-}
-.shadow-xs {
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-2xs);
 }
 
 /* ── Animations ────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-up {
-  animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeUp var(--dur-normal) var(--ease-clinical) both;
 }
 
 @keyframes pulse-ring {
-  0%   { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
-  70%  { transform: scale(1);    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-  100% { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+  0%   { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+  100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
 }
-.pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+.pulse-ring { animation: pulse-ring 2.2s ease-out infinite; }
 
-/* ── Design Components ─────────────────────────── */
+/* ── Reusable Semantic Design Components ───────── */
 @layer components {
   /* Urgency level variants */
-  .urgency-emergency   { @apply bg-rose-50/70 border-rose-200 text-rose-950; }
-  .urgency-urgent      { @apply bg-amber-50/70 border-amber-200 text-amber-950; }
-  .urgency-non_emergency { @apply bg-emerald-50/70 border-emerald-200 text-emerald-950; }
+  .urgency-emergency   { @apply bg-rose-50 border-rose-200 text-rose-950; }
+  .urgency-urgent      { @apply bg-amber-50 border-amber-200 text-amber-950; }
+  .urgency-non_emergency { @apply bg-emerald-50 border-emerald-200 text-emerald-950; }
   .urgency-uncertain   { @apply bg-slate-50 border-slate-200 text-slate-800; }
 
-  /* Skeleton loader */
-  .skeleton { @apply bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse rounded; }
+  /* Base Clinical Card */
+  .card-clinical {
+    @apply bg-white rounded-2xl border border-slate-200/90 shadow-card transition-all duration-200;
+  }
+  .card-clinical-hover {
+    @apply bg-white rounded-2xl border border-slate-200/90 shadow-card hover:border-slate-300 hover:shadow-elevated transition-all duration-200;
+  }
 
-  /* Base card */
-  .card { @apply bg-white rounded-[28px] border border-slate-200/90 shadow-card; }
-
-  /* Section micro-label */
+  /* Section micro-labels */
   .section-label {
-    @apply text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-slate-400;
+    @apply text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400;
   }
   .section-label-crimson {
-    @apply text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-crimson-600;
+    @apply text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-crimson-600;
   }
 
-  /* Primary button */
+  /* Primary Button (Carbon) */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
            bg-carbon text-white font-bold text-sm tracking-wide
-           px-7 py-3.5 rounded-2xl
+           px-6 py-3 rounded-xl
            hover:bg-black active:scale-[0.98]
-           transition-all duration-200;
+           transition-all duration-200 shadow-2xs;
   }
 
-  /* Danger button */
+  /* Danger / Emergency Call Button (Crimson) */
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2
            bg-crimson-600 text-white font-bold text-sm tracking-wide
-           px-7 py-3.5 rounded-2xl
+           px-6 py-3 rounded-xl
            hover:bg-crimson-700 active:scale-[0.98]
-           transition-all duration-200;
+           transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-crimson-600/20;
   }
 
-  /* Ghost button */
+  /* Secondary / Ghost Button */
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2
            bg-white text-slate-700 font-semibold text-sm
-           border border-slate-200/90 px-6 py-3 rounded-2xl
+           border border-slate-200/90 px-5 py-2.5 rounded-xl
            hover:bg-slate-50 hover:border-slate-300
            transition-all duration-200 shadow-2xs;
   }

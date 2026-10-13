@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { motion } from 'motion/react';
 import { RotateCcw } from 'lucide-react';
 
 export default function StatusPage() {
@@ -45,7 +46,7 @@ export default function StatusPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] py-10 px-4 sm:px-6 lg:px-8 antialiased">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -65,55 +66,46 @@ export default function StatusPage() {
           <button
             onClick={fetchStatus}
             disabled={loading}
-            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-2xs transition-colors"
+            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-2xs transition-colors cursor-pointer"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-crimson-600' : ''}`} />
             <span>Poll Telemetry</span>
           </button>
         </div>
 
-        {/* Big Metrics Grid */}
+        {/* Big Metrics Grid with Staggered Entrance */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs text-center">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-              Uptime SLA
-            </span>
-            <span className="text-xl sm:text-2xl font-extrabold text-emerald-600 font-mono">
-              {statusData?.metrics?.uptimePercentage || '99.98%'}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs text-center">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-              Active Triage Logs
-            </span>
-            <span className="text-xl sm:text-2xl font-extrabold text-carbon font-mono">
-              {statusData?.metrics?.totalTriageEncounters || 18}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs text-center">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-              Trauma Centers
-            </span>
-            <span className="text-xl sm:text-2xl font-extrabold text-carbon font-mono">
-              {statusData?.metrics?.activeHospitalsIndexed || 6}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs text-center">
-            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-              Heap Memory
-            </span>
-            <span className="text-xl sm:text-2xl font-extrabold text-carbon font-mono">
-              {statusData?.metrics?.memoryUsageMB || 42} MB
-            </span>
-          </div>
+          {[
+            { label: 'Uptime SLA', val: statusData?.metrics?.uptimePercentage || '99.98%', accent: 'text-emerald-600' },
+            { label: 'Active Triage Logs', val: statusData?.metrics?.totalTriageEncounters || 18, accent: 'text-carbon' },
+            { label: 'Trauma Centers', val: statusData?.metrics?.activeHospitalsIndexed || 6, accent: 'text-carbon' },
+            { label: 'Heap Memory', val: `${statusData?.metrics?.memoryUsageMB || 42} MB`, accent: 'text-carbon' },
+          ].map((m, idx) => (
+            <motion.div
+              key={m.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-card text-center"
+            >
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
+                {m.label}
+              </span>
+              <span className={`text-xl sm:text-2xl font-extrabold font-mono ${m.accent}`}>
+                {m.val}
+              </span>
+            </motion.div>
+          ))}
         </div>
 
         {/* Individual Services */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs space-y-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-card space-y-4"
+        >
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 font-mono">
             Subsystem Health Status
           </h2>
 
@@ -125,7 +117,7 @@ export default function StatusPage() {
                     <span className="text-xs font-bold text-carbon">{srv.name}</span>
                   </div>
                   {srv.description && (
-                    <p className="text-[11px] text-slate-400">{srv.description}</p>
+                    <p className="text-[11px] text-slate-400 font-light">{srv.description}</p>
                   )}
                 </div>
 
@@ -136,7 +128,7 @@ export default function StatusPage() {
                     </span>
                   )}
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono shadow-2xs ${
                       srv.status === 'operational'
                         ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                         : 'bg-amber-50 text-amber-800 border border-amber-200'
@@ -153,7 +145,7 @@ export default function StatusPage() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

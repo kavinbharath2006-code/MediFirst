@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import InteractiveVectorGrid from '../components/InteractiveVectorGrid';
 import {
   Activity,
@@ -11,7 +12,7 @@ import {
   Shield,
   AlertTriangle,
   Info,
-  Zap
+  Zap,
 } from '../components/icons';
 import EmergencyInput from '../components/EmergencyInput';
 import { getEmergencyGuidance, DEMO_MODE } from '../api/claude';
@@ -60,6 +61,15 @@ const CLINICAL_BENCHMARKS = [
   },
 ];
 
+const slideUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.28, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -94,12 +104,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] antialiased">
-      
       {/* ─────────────────────────────────────────────────────────────
           1. FLAGSHIP HERO WITH INTERACTIVE VECTOR CANVAS
       ───────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[85vh] flex flex-col justify-between overflow-hidden cursor-crosshair pb-12">
-        {/* Ultramarine Gradient Background */}
+        {/* Ultramarine / Carbon Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#091730] via-[#0b244d] to-[#040b17] pointer-events-none" />
 
         {/* 60 FPS Interactive Vector Grid */}
@@ -112,47 +121,73 @@ export default function Home() {
           baseColor="rgba(255, 255, 255, 0.18)"
         />
 
-        {/* Radial Ambient Spotlight */}
+        {/* Ambient Radial Spotlight */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none" />
 
-        {/* Main Content Area */}
+        {/* Main Hero Intake Area */}
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 z-10 text-center flex-1 flex flex-col justify-center items-center">
-          
           {/* Eyebrow Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-sky-300 text-xs font-mono uppercase tracking-widest mb-6 shadow-xs">
-            <Zap size={14} className="text-[#ccff00]" />
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-sky-300 text-xs font-mono uppercase tracking-widest mb-6 shadow-2xs"
+          >
+            <Zap size={14} className="text-[#38bdf8]" />
             <span>Acute AI Triage · GPS Hospital Routing · 108 Direct</span>
-          </div>
+          </motion.div>
 
           {/* Editorial Display Heading */}
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-[0.94] max-w-4xl mb-4 font-sans">
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-[0.95] max-w-4xl mb-4 font-sans"
+          >
             Seconds <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-white to-sky-200">Count.</span>
             <br />
             Care in Real Time.
-          </h1>
+          </motion.h1>
 
           {/* Subtitle */}
-          <p className="text-slate-300 text-sm sm:text-base md:text-lg max-w-2xl font-light leading-relaxed mb-8">
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-slate-300 text-sm sm:text-base md:text-lg max-w-2xl font-light leading-relaxed mb-8"
+          >
             Your instant guidance system for acute medical response, algorithmic hospital dispatch, and emergency triage.
-          </p>
+          </motion.p>
 
           {/* Input Component Embedded in Hero */}
-          <div className="w-full max-w-3xl text-left bg-white rounded-2xl shadow-2xl p-4 sm:p-5 border border-white/20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-3xl text-left bg-white rounded-2xl shadow-elevated p-4 sm:p-5 border border-slate-200/90"
+          >
             <EmergencyInput onSubmit={handleSubmit} loading={loading} />
 
-            {/* Error Notification */}
-            {error && (
-              <div
-                role="alert"
-                className="mt-4 bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs sm:text-sm text-rose-900 flex items-start gap-3 shadow-2xs"
-              >
-                <AlertTriangle className="w-4 h-4 text-rose-700 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold block">Intake Submission Error</strong>
-                  <span>{error}</span>
-                </div>
-              </div>
-            )}
+            {/* Error Notification with Smooth Slide */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  key="error-box"
+                  initial={{ opacity: 0, height: 0, y: -8 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                  role="alert"
+                  className="mt-4 bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs sm:text-sm text-rose-900 flex items-start gap-3 shadow-2xs overflow-hidden"
+                >
+                  <AlertTriangle className="w-4 h-4 text-rose-700 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-semibold block">Intake Submission Error</strong>
+                    <span>{error}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Diagnostic Mode Status */}
             {DEMO_MODE && (
@@ -163,12 +198,12 @@ export default function Home() {
                     <strong>Offline Protocol Standby:</strong> Loaded with verified clinical first-aid rules.
                   </span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-bold">
                   VERIFIED_INDEX
                 </span>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Telemetric HUD Ticker Badges */}
@@ -180,9 +215,12 @@ export default function Home() {
               { label: 'AI Protocol Latency', value: '< 18 ms', sub: 'Deterministic Fallback', accent: 'text-amber-400' },
               { label: 'Verified Specialties', value: '54 Units', sub: 'ICU / Neuro / Burns', accent: 'text-purple-400' },
             ].map((metric, idx) => (
-              <div
+              <motion.div
                 key={idx}
-                className="bg-white/5 border border-white/10 backdrop-blur-md rounded-xl p-3.5 transition-all hover:bg-white/10"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: 0.2 + idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white/5 border border-white/10 backdrop-blur-md rounded-xl p-3.5 transition-colors hover:bg-white/10"
               >
                 <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1">
                   {metric.label}
@@ -193,7 +231,7 @@ export default function Home() {
                 <div className="text-[11px] text-slate-400 mt-0.5 font-light">
                   {metric.sub}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -202,20 +240,29 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           2. CLINICAL ARCHITECTURE & OPERATIONAL SEQUENCE
       ───────────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-white text-slate-700 text-xs font-semibold px-3 py-1 rounded-md border border-slate-200/90 shadow-2xs mb-2">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-white text-slate-700 text-xs font-semibold px-3 py-1 rounded-full border border-slate-200/90 shadow-2xs mb-2">
             <span className="w-2 h-2 rounded-full bg-sky-700" />
             <span className="uppercase font-mono tracking-wider">Clinical Framework</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Clinical Decision Support Architecture
           </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl mx-auto">
+            Grounded multi-tiered triage and casualty routing minimizing pre-hospital delay
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-800">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.28, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card hover:shadow-elevated transition-shadow duration-200 space-y-2.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-800">
               <Activity className="w-4 h-4 stroke-[2]" />
             </div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
@@ -224,10 +271,16 @@ export default function Home() {
             <p className="text-xs text-slate-600 leading-relaxed font-light">
               Real-time classification based on Manchester Triage principles, separating life-threatening resuscitation events from guarded conditions.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-800">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.28, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card hover:shadow-elevated transition-shadow duration-200 space-y-2.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-800">
               <ShieldCheck className="w-4 h-4 stroke-[2]" />
             </div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
@@ -236,10 +289,16 @@ export default function Home() {
             <p className="text-xs text-slate-600 leading-relaxed font-light">
               Deterministic matching through indexed knowledge bases (Red Cross, WHO, ERC) prevents generative hallucinations in critical pathways.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-800">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.28, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card hover:shadow-elevated transition-shadow duration-200 space-y-2.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-800">
               <PhoneCall className="w-4 h-4 stroke-[2]" />
             </div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
@@ -248,14 +307,14 @@ export default function Home() {
             <p className="text-xs text-slate-600 leading-relaxed font-light">
               Emergency-type routing connects patients to facilities equipped with dedicated ICUs, burn centers, cardiac catheter labs, or trauma bays.
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
           3. VERIFIED CLINICAL BENCHMARKS
       ───────────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8 border-t border-slate-200/80">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 border-t border-slate-200/80">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-bold text-slate-900 tracking-tight">Verified Protocol Benchmarks</h2>
@@ -265,18 +324,23 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {CLINICAL_BENCHMARKS.map((benchmark) => {
+          {CLINICAL_BENCHMARKS.map((benchmark, idx) => {
             const Icon = benchmark.icon;
             return (
-              <button
+              <motion.button
                 key={benchmark.id}
+                custom={idx}
+                variants={slideUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
                 onClick={() => handleBenchmarkSelect(benchmark)}
-                className="group p-5 bg-white rounded-2xl border border-slate-200/90 hover:border-sky-300 hover:shadow-md transition-all text-left flex flex-col justify-between"
+                className="group p-5 bg-white rounded-2xl border border-slate-200/90 hover:border-sky-300 hover:shadow-elevated transition-all duration-200 text-left flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-sky-50 group-hover:text-sky-700 transition-colors">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-sky-50 group-hover:text-sky-700 transition-colors">
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <span className="text-[11px] font-mono font-medium text-slate-500">
@@ -300,12 +364,12 @@ export default function Home() {
 
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                   <span className="font-mono text-[10px]">AHA Protocol Verified</span>
-                  <span className="text-sky-700 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                  <span className="text-sky-700 font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
                     <span>Evaluate</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -318,13 +382,13 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <a
             href={`tel:${EMERGENCY_NUMBERS.primary}`}
-            className="flex items-center gap-3 bg-rose-700 hover:bg-rose-800 text-white p-4 rounded-2xl transition-all shadow-xs"
+            className="flex items-center gap-3 bg-crimson-600 hover:bg-crimson-700 active:bg-crimson-800 text-white p-4 rounded-2xl transition-all shadow-sm hover:shadow-md hover:shadow-crimson-600/20"
           >
-            <div className="w-10 h-10 rounded-xl bg-rose-800/80 flex items-center justify-center text-white flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-crimson-700/80 flex items-center justify-center text-white flex-shrink-0">
               <PhoneCall className="w-5 h-5 stroke-[2]" />
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-rose-200 block font-mono">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-red-200 block font-mono">
                 Emergency Dispatch
               </span>
               <span className="text-base font-bold tracking-tight">Call {EMERGENCY_NUMBERS.primary} (Direct)</span>
@@ -333,9 +397,9 @@ export default function Home() {
 
           <button
             onClick={() => navigate('/services')}
-            className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200/90 p-4 rounded-2xl text-left transition-all shadow-2xs"
+            className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200/90 p-4 rounded-2xl text-left transition-all shadow-2xs group"
           >
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0 group-hover:bg-sky-50 group-hover:text-sky-700 transition-colors">
               <MapPin className="w-5 h-5 stroke-[1.75]" />
             </div>
             <div className="flex-1 min-w-0">
@@ -344,14 +408,14 @@ export default function Home() {
               </span>
               <span className="text-xs font-bold text-slate-900 block truncate">Nearby Emergency Centers</span>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
           </button>
 
           <button
             onClick={() => navigate('/safety')}
-            className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200/90 p-4 rounded-2xl text-left transition-all shadow-2xs"
+            className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200/90 p-4 rounded-2xl text-left transition-all shadow-2xs group"
           >
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
               <Shield className="w-5 h-5 stroke-[1.75]" />
             </div>
             <div className="flex-1 min-w-0">
@@ -360,7 +424,7 @@ export default function Home() {
               </span>
               <span className="text-xs font-bold text-slate-900 block truncate">Governance & Disclaimers</span>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </section>

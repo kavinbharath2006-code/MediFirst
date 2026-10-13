@@ -24,11 +24,15 @@ import { GuidanceSkeleton, AlertBanner } from '../components/UIStates';
 import { getEmergencyGuidance } from '../api/claude';
 import { EMERGENCY_NUMBERS } from '../data/constants';
 import { resolveLocation } from '../utils/location';
+import { useSettings } from '../context/SettingsContext';
+import { Share2, MessageSquare, CheckCheck } from 'lucide-react';
 import axios from 'axios';
 
 export default function Result() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { settings } = useSettings?.() || { settings: { contacts: [] } };
+  const defaultContact = settings?.contacts?.[0];
 
   const [guidance, setGuidance] = useState(state?.guidance || null);
   const [loading, setLoading] = useState(!state?.guidance);
@@ -39,6 +43,12 @@ export default function Result() {
   const [showAvoid, setShowAvoid] = useState(true);
   const [showSources, setShowSources] = useState(false);
   const [overrideActive, setOverrideActive] = useState(false);
+
+  // Relative Alert & Live Location State
+  const [relativePhone, setRelativePhone] = useState(defaultContact?.phone || '');
+  const [relativeName, setRelativeName] = useState(defaultContact?.name || '');
+  const [relativeAlerting, setRelativeAlerting] = useState('');
+  const [relativeAlertSuccess, setRelativeAlertSuccess] = useState('');
 
   // Specialized Hospital Routing State
   const [hospitals, setHospitals] = useState(state?.guidance?.nearbyHospitals || []);
@@ -52,6 +62,14 @@ export default function Result() {
 
   const query = state?.query || 'Acute clinical presentation';
   const isDemo = state?.isDemo || false;
+
+  // Auto-sync relative contact if settings loads
+  useEffect(() => {
+    if (defaultContact && !relativePhone) {
+      setRelativePhone(defaultContact.phone || '');
+      setRelativeName(defaultContact.name || '');
+    }
+  }, [defaultContact, relativePhone]);
 
   useEffect(() => {
     if (!guidance && query) {
@@ -141,6 +159,62 @@ export default function Result() {
       setFeedbackSubmitted(true);
     } finally {
       setSubmittingFeedback(false);
+    }
+  };
+
+  const handleAlertRelative = async (channel = 'whatsapp') => {
+    if (!relativePhone) {
+      alert('Please provide a Relative Phone Number to share live incident coordinates.');
+      return;
+    }
+    setRelativeAlerting(channel);
+    try {
+      const loc = userLocation || (await resolveLocation().catch(() => null));
+      const categoryName = guidance?.category || query || 'Emergency First-Aid';
+      const activeStepTitle = steps[activeStep]?.instruction || steps[0]?.instruction || 'Administering acute first-aid';
+      const topHospital = nearbyHospitals[0];
+
+      const res = await axios.post('/api/emergency/alert-relative', {
+        patientName: 'Emergency Patient',
+        emergencyType: categoryName,
+        urgency: guidance?.urgency?.level || 'HIGH',
+        relativeName: relativeName || 'Relative',
+        relativePhone,
+        lat: loc?.lat,
+        lng: loc?.lng,
+        locationLabel: loc?.label || (loc?.lat ? `${loc.lat}, ${loc.lng}` : null),
+        hospitalName: topHospital?.name,
+        hospitalPhone: topHospital?.phone,
+        firstAidStep: activeStepTitle,
+      });
+
+      const data = res.data;
+      if (channel === 'whatsapp') {
+        const targetUrl = data.whatsappUrl || `https://wa.me/${relativePhone.replace(/\D/g, '')}?text=${encodeURIComponent(`🚨 FIRST-AID ALERT: https://maps.google.com/?q=${loc?.lat},${loc?.lng}`)}`;
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        setRelativeAlertSuccess('Live location & emergency alert transmitted via WhatsApp!');
+      } else {
+        const targetUrl = data.smsUrl || `sms:${relativePhone}?body=${encodeURIComponent(`🚨 FIRST-AID ALERT: https://maps.google.com/?q=${loc?.lat},${loc?.lng}`)}`;
+        window.location.href = targetUrl;
+        setRelativeAlertSuccess('Messages app opened with live incident coordinates!');
+      }
+      setTimeout(() => setRelativeAlertSuccess(''), 4000);
+    } catch (err) {
+      console.warn('Relative alert API call error, falling back to direct share:', err);
+      const loc = userLocation;
+      const mapsUrl = loc?.lat && loc?.lng ? `https://maps.google.com/?q=${loc.lat},${loc.lng}` : 'Incident Location';
+      const msg = `🚨 MEDIFIRST FIRST-AID ALERT: Person needs immediate first aid for ${guidance?.category || 'Medical Emergency'}.\n📍 Incident GPS Location: ${mapsUrl}\n⏱️ Status: Emergency first aid in progress.`;
+      if (channel === 'whatsapp') {
+        const digits = relativePhone.replace(/\D/g, '');
+        const waNum = digits.length === 10 ? `91${digits}` : digits;
+        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = `sms:${relativePhone.replace(/[^\d+]/g, '')}?body=${encodeURIComponent(msg)}`;
+      }
+      setRelativeAlertSuccess('Emergency alert dispatched to relative!');
+      setTimeout(() => setRelativeAlertSuccess(''), 4000);
+    } finally {
+      setRelativeAlerting('');
     }
   };
 
@@ -560,6 +634,104 @@ export default function Result() {
                     )}
                   </div>
                 </aside>
+
+                {/* RELATIVE EMERGENCY LOCATION SHARING */}
+                <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-700">
+                        <Share2 className="w-4 h-4 stroke-[2]" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-mono">
+                          Notify Relative & Share Live Location
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Transmit GPS incident coordinates & active first-aid updates
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      1-Tap Broadcast
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Relative / Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        value={relativeName}
+                        onChange={(e) => setRelativeName(e.target.value)}
+                        placeholder="e.g. Spouse, Mom, Brother"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Relative Phone Number</span>
+                        <span className="text-[10px] text-emerald-600 font-mono font-bold">WhatsApp / SMS</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={relativePhone}
+                        onChange={(e) => setRelativePhone(e.target.value)}
+                        placeholder="e.g. +91 98765 43210"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={!relativePhone || relativeAlerting === 'whatsapp'}
+                      onClick={() => handleAlertRelative('whatsapp')}
+                      className="flex-1 min-w-[140px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>{relativeAlerting === 'whatsapp' ? 'Sending...' : 'WhatsApp Location'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!relativePhone || relativeAlerting === 'sms'}
+                      onClick={() => handleAlertRelative('sms')}
+                      className="flex-1 min-w-[140px] px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 active:bg-sky-900 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>{relativeAlerting === 'sms' ? 'Sending...' : 'Send Messages / SMS'}</span>
+                    </button>
+
+                    {relativePhone && (
+                      <a
+                        href={`tel:${relativePhone.replace(/[^\d+]/g, '')}`}
+                        className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-1 border border-slate-200"
+                        title="Direct Call Relative"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Call</span>
+                      </a>
+                    )}
+                  </div>
+
+                  {relativeAlertSuccess && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-1.5">
+                      <CheckCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>{relativeAlertSuccess}</span>
+                    </div>
+                  )}
+
+                  {userLocation?.lat && (
+                    <div className="text-[11px] text-slate-400 font-mono flex items-center justify-between border-t border-slate-100 pt-2">
+                      <span>Incident GPS:</span>
+                      <span className="text-slate-600 font-semibold">{userLocation.lat.toFixed(4)}° N, {userLocation.lng.toFixed(4)}° E</span>
+                    </div>
+                  )}
+                </section>
 
                 {/* SPECIALTY ROUTING / ACCIDENT HOSPITALS */}
                 <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-card space-y-4">

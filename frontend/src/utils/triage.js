@@ -25,17 +25,22 @@ export const CRITICAL_FLAGS = [
 export const isCritical = (flags) => flags.length > 0;
 
 export function buildSummary(form, location, topHospital) {
-  const typeLabel = TYPES.find((t) => t.id === form.type)?.label || 'Emergency';
+  const typeLabel = TYPES.find((t) => t.id === form.type)?.label || 'Medical Emergency';
+  const hasCoords = location?.lat && location?.lng;
+  const mapsLink = hasCoords ? `https://maps.google.com/?q=${location.lat},${location.lng}` : (location?.label || null);
+
   const lines = [
-    `EMERGENCY: ${typeLabel}`,
-    `Patient: ${form.name || 'Unknown'}${form.age ? `, ${form.age} yrs` : ''}`,
-    form.flags.length ? `Signs: ${CRITICAL_FLAGS.filter((f) => form.flags.includes(f.id)).map((f) => f.label).join('; ')}` : null,
-    form.bloodGroup ? `Blood group: ${form.bloodGroup}` : null,
-    form.allergies ? `Allergies: ${form.allergies}` : null,
-    form.conditions ? `Conditions: ${form.conditions}` : null,
-    form.medicines ? `Medicines: ${form.medicines}` : null,
-    location ? `Location: https://maps.google.com/?q=${location.lat},${location.lng}` : null,
-    topHospital ? `Heading to: ${topHospital.name}` : null,
+    `🚨 MEDIFIRST EMERGENCY FIRST-AID ALERT: ${typeLabel.toUpperCase()}`,
+    `👤 Patient: ${form.name || 'Emergency Patient'}${form.age ? ` (${form.age} yrs)` : ''}`,
+    form.flags?.length ? `⚠️ Signs: ${CRITICAL_FLAGS.filter((f) => form.flags.includes(f.id)).map((f) => f.label).join('; ')}` : null,
+    form.bloodGroup ? `🩸 Blood Group: ${form.bloodGroup}` : null,
+    form.allergies ? `⚠️ Allergies: ${form.allergies}` : null,
+    form.conditions ? `🩺 Chronic Conditions: ${form.conditions}` : null,
+    form.medicines ? `💊 Current Meds: ${form.medicines}` : null,
+    mapsLink ? `📍 Live Incident Location: ${mapsLink}` : null,
+    topHospital ? `🏥 Destination Hospital: ${topHospital.name}${topHospital.phone ? ` (${topHospital.phone})` : ''}` : null,
+    form.relativePhone ? `📞 Relative Notified: ${form.relativeName ? form.relativeName + ' - ' : ''}${form.relativePhone}` : null,
+    `⏱️ STATUS: First-aid is actively being administered. Paramedics / EMS alerted.`,
   ];
   return lines.filter(Boolean).join('\n');
 }

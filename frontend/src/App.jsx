@@ -6,6 +6,11 @@ import Result from './pages/Result';
 import Services from './pages/Services';
 import Safety from './pages/Safety';
 import EmergencyHeroLandingPage from './pages/EmergencyHeroLandingPage';
+import GuidesPage from './pages/GuidesPage';
+import CaseStudiesPage from './pages/CaseStudiesPage';
+import NewsPage from './pages/NewsPage';
+import ApiDocsPage from './pages/ApiDocsPage';
+import StatusPage from './pages/StatusPage';
 
 // Emergency module imports from pages/emergency
 import { SettingsProvider } from './context/SettingsContext';
@@ -31,6 +36,14 @@ function App() {
             <Route path="/safety" element={<Safety />} />
             <Route path="/dispatch" element={<EmergencyHeroLandingPage />} />
             <Route path="/hero" element={<EmergencyHeroLandingPage />} />
+
+            {/* Resources Routes */}
+            <Route path="/guides" element={<GuidesPage />} />
+            <Route path="/case-studies" element={<CaseStudiesPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/docs" element={<ApiDocsPage />} />
+            <Route path="/api-docs" element={<ApiDocsPage />} />
+            <Route path="/status" element={<StatusPage />} />
 
             {/* Isolated Emergency & First-Aid Module */}
             <Route

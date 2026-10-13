@@ -1,15 +1,16 @@
 import * as React from "react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown } from "lucide-react";
 
 /**
- * Animated dropdown navigation bar — MediFirst design tokens.
- * Centre this inside the sticky header between the brand and CTA buttons.
+ * Animated dropdown navigation bar with React Router integration.
  */
 export function DropdownNavigation({ navItems }) {
   const [openMenu, setOpenMenu] = React.useState(null);
   const [isHover, setIsHover] = useState(null);
+  const navigate = useNavigate();
 
   const handleHover = (menuLabel) => setOpenMenu(menuLabel);
 
@@ -25,7 +26,12 @@ export function DropdownNavigation({ navItems }) {
           >
             <button
               type="button"
-              onClick={() => navItem.link && (window.location.href = navItem.link)}
+              onClick={() => {
+                if (navItem.link) {
+                  setOpenMenu(null);
+                  navigate(navItem.link);
+                }
+              }}
               className="text-sm py-2 px-3.5 flex cursor-pointer transition-colors duration-200 items-center justify-center gap-1.5 text-slate-500 hover:text-carbon relative rounded-full"
               onMouseEnter={() => setIsHover(navItem.id)}
               onMouseLeave={() => setIsHover(null)}
@@ -61,31 +67,33 @@ export function DropdownNavigation({ navItems }) {
                   >
                     <div className="w-fit shrink-0 flex space-x-8 overflow-hidden">
                       {navItem.subMenus.map((sub) => (
-                        <motion.div layout className="w-full min-w-[160px]" key={sub.title}>
+                        <motion.div layout className="w-full min-w-[170px]" key={sub.title}>
                           <h3 className="mb-3.5 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">
                             {sub.title}
                           </h3>
                           <ul className="space-y-0.5">
                             {sub.items.map((item) => {
                               const Icon = item.icon;
+                              const to = item.href || "#";
                               return (
                                 <li key={item.label}>
-                                  <a
-                                    href={item.href || "#"}
-                                    className="flex items-start space-x-3 group/link p-2 -mx-1.5 rounded-xl transition-colors hover:bg-slate-50"
+                                  <Link
+                                    to={to}
+                                    onClick={() => setOpenMenu(null)}
+                                    className="flex items-start space-x-3 group/link p-2 -mx-1.5 rounded-xl transition-colors hover:bg-slate-50 cursor-pointer"
                                   >
                                     <div className="border border-slate-200/80 text-slate-600 rounded-lg flex items-center justify-center size-8 shrink-0 group-hover/link:bg-crimson-50 group-hover/link:border-red-200/60 group-hover/link:text-crimson-700 transition-colors duration-200">
                                       <Icon className="h-4 w-4 flex-none" />
                                     </div>
                                     <div className="leading-5">
-                                      <p className="text-[13px] font-semibold text-carbon shrink-0">
+                                      <p className="text-[13px] font-semibold text-carbon shrink-0 group-hover/link:text-crimson-600 transition-colors">
                                         {item.label}
                                       </p>
                                       <p className="text-[11px] text-slate-400 shrink-0 group-hover/link:text-slate-600 transition-colors duration-200 mt-0.5 leading-tight">
                                         {item.description}
                                       </p>
                                     </div>
-                                  </a>
+                                  </Link>
                                 </li>
                               );
                             })}

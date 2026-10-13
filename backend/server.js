@@ -45,6 +45,7 @@ const hospitalsRoutes   = require('./routes/hospitals');
 const feedbackRoutes    = require('./routes/feedback');
 const logRoutes         = require('./routes/log');
 const emergencyRoutes   = require('./routes/emergencyRoutes');
+const resourceRoutes    = require('./routes/resourceRoutes');
 const { registerAllJobs } = require('./services/automationService');
 
 const app  = express();
@@ -84,6 +85,8 @@ app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/feedback',  feedbackRoutes);
 app.use('/api/log',       logRoutes);
 app.use('/api/emergency', emergencyRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api',          resourceRoutes);
 
 // Frontend configuration
 app.get('/api/config', (_req, res) => {

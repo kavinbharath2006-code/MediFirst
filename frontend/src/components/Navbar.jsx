@@ -119,11 +119,6 @@ const DESKTOP_NAV_ITEMS = [
   },
   {
     id: 4,
-    label: 'Pricing',
-    link: '/pricing',
-  },
-  {
-    id: 5,
     label: 'Settings',
     link: '/settings',
   },
